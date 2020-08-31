@@ -1,0 +1,1714 @@
+; Zilog eZ80 ANSI C Compiler Release 3.4
+; -debug -optsize -noreduceopt -nomodsect -peephole -globalopt
+; -localcse -const=ROM 
+	FILE	"SRC\MAIN.C"
+	.assume ADL=1
+.DEBUG "C"
+	SEGMENT CODE
+.BEGREC "NONAME0",9
+.DEFINE "sign"
+.VALUE 0
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "exp"
+.VALUE 1
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "mant"
+.VALUE 2
+.CLASS 8
+.DIM 7
+.TYPE 108
+.ENDEF
+.ENDREC "NONAME0"
+.BEGREC "NONAME1",18
+.DEFINE "real"
+.VALUE 0
+.CLASS 8
+.TAG "NONAME0"
+.TYPE 8
+.ENDEF
+.DEFINE "imag"
+.VALUE 9
+.CLASS 8
+.TAG "NONAME0"
+.TYPE 8
+.ENDEF
+.ENDREC "NONAME1"
+.BEGREC "NONAME2",11
+.DEFINE "dim"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "items"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TAG "NONAME0"
+.TYPE 104
+.ENDEF
+.ENDREC "NONAME2"
+.BEGREC "NONAME3",20
+.DEFINE "dim"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "items"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TAG "NONAME1"
+.TYPE 104
+.ENDEF
+.ENDREC "NONAME3"
+.BEGREC "NONAME4",11
+.DEFINE "cols"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "rows"
+.VALUE 1
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "items"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TAG "NONAME0"
+.TYPE 104
+.ENDEF
+.ENDREC "NONAME4"
+.BEGREC "NONAME5",3
+.DEFINE "len"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "data"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TYPE 98
+.ENDEF
+.ENDREC "NONAME5"
+.BEGREC "NONAME6",3
+.DEFINE "len"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "data"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TYPE 98
+.ENDEF
+.ENDREC "NONAME6"
+.BEGREC "NONAME7",3
+.DEFINE "size"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "data"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TYPE 108
+.ENDEF
+.ENDREC "NONAME7"
+.BEGREC "font",12
+.DEFINE "font"
+.VALUE 0
+.CLASS 8
+.TAG "font"
+.TYPE 40
+.ENDEF
+.DEFINE "drawChar"
+.VALUE 3
+.CLASS 8
+.TYPE 545
+.ENDEF
+.DEFINE "getWidth"
+.VALUE 6
+.CLASS 8
+.TYPE 558
+.ENDEF
+.DEFINE "getHeight"
+.VALUE 9
+.CLASS 8
+.TYPE 558
+.ENDEF
+.ENDREC "font"
+.BEGREC "system_info",40
+.DEFINE "size"
+.VALUE 0
+.CLASS 8
+.TYPE 14
+.ENDEF
+.DEFINE "hardwareVersion"
+.VALUE 3
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "hardwareType"
+.VALUE 4
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "hardwareType2"
+.VALUE 5
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "osMajorVersion"
+.VALUE 6
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "osMinorVersion"
+.VALUE 7
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "osRevisionVersion"
+.VALUE 8
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "osBuildVersion"
+.VALUE 9
+.CLASS 8
+.TYPE 14
+.ENDEF
+.DEFINE "bootMajorVersion"
+.VALUE 12
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "bootMinorVersion"
+.VALUE 13
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "bootRevisionVersion"
+.VALUE 14
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "bootBuildVersion"
+.VALUE 15
+.CLASS 8
+.TYPE 14
+.ENDEF
+.DEFINE "unknown"
+.VALUE 18
+.CLASS 8
+.DIM 10
+.TYPE 108
+.ENDEF
+.DEFINE "calcid"
+.VALUE 28
+.CLASS 8
+.DIM 8
+.TYPE 108
+.ENDEF
+.DEFINE "ti"
+.VALUE 36
+.CLASS 8
+.DIM 2
+.TYPE 98
+.ENDEF
+.DEFINE "language"
+.VALUE 38
+.CLASS 8
+.TYPE 13
+.ENDEF
+.ENDREC "system_info"
+.BEGREC "NONAME8",6
+.DEFINE "quot"
+.VALUE 0
+.CLASS 8
+.TYPE 4
+.ENDEF
+.DEFINE "rem"
+.VALUE 3
+.CLASS 8
+.TYPE 4
+.ENDEF
+.ENDREC "NONAME8"
+.BEGREC "NONAME9",8
+.DEFINE "quot"
+.VALUE 0
+.CLASS 8
+.TYPE 5
+.ENDEF
+.DEFINE "rem"
+.VALUE 4
+.CLASS 8
+.TYPE 5
+.ENDEF
+.ENDREC "NONAME9"
+.BEGREC "header",6
+.DEFINE "s"
+.VALUE 0
+.CLASS 11
+.TAG "NONAME10"
+.TYPE 8
+.ENDEF
+.DEFINE "x"
+.VALUE 0
+.CLASS 11
+.TYPE 2
+.ENDEF
+.ENDREC "header"
+.BEGREC "NONAME10",6
+.DEFINE "ptr"
+.VALUE 0
+.CLASS 8
+.TAG "header"
+.TYPE 40
+.ENDEF
+.DEFINE "size"
+.VALUE 3
+.CLASS 8
+.TYPE 14
+.ENDEF
+.ENDREC "NONAME10"
+.BEGREC "NONAME11",3
+.DEFINE "width"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "height"
+.VALUE 1
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "data"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TYPE 108
+.ENDEF
+.ENDREC "NONAME11"
+.BEGREC "NONAME12",3
+.DEFINE "width"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "height"
+.VALUE 1
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "data"
+.VALUE 2
+.CLASS 8
+.DIM 1
+.TYPE 108
+.ENDEF
+.ENDREC "NONAME12"
+.BEGREC "NONAME13",6
+.DEFINE "x"
+.VALUE 0
+.CLASS 8
+.TYPE 4
+.ENDEF
+.DEFINE "y"
+.VALUE 3
+.CLASS 8
+.TYPE 4
+.ENDEF
+.ENDREC "NONAME13"
+.BEGREC "NONAME14",12
+.DEFINE "xmin"
+.VALUE 0
+.CLASS 8
+.TYPE 4
+.ENDEF
+.DEFINE "ymin"
+.VALUE 3
+.CLASS 8
+.TYPE 4
+.ENDEF
+.DEFINE "xmax"
+.VALUE 6
+.CLASS 8
+.TYPE 4
+.ENDEF
+.DEFINE "ymax"
+.VALUE 9
+.CLASS 8
+.TYPE 4
+.ENDEF
+.ENDREC "NONAME14"
+.BEGREC "NONAME15",18
+.DEFINE "map"
+.VALUE 0
+.CLASS 8
+.TYPE 44
+.ENDEF
+.DEFINE "tiles"
+.VALUE 3
+.CLASS 8
+.TAG "NONAME11"
+.TYPE 296
+.ENDEF
+.DEFINE "tile_height"
+.VALUE 6
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "tile_width"
+.VALUE 7
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "draw_height"
+.VALUE 8
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "draw_width"
+.VALUE 9
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "type_width"
+.VALUE 10
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "type_height"
+.VALUE 11
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "height"
+.VALUE 12
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "width"
+.VALUE 13
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "y_loc"
+.VALUE 14
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "x_loc"
+.VALUE 15
+.CLASS 8
+.TYPE 14
+.ENDEF
+.ENDREC "NONAME15"
+.BEGREC "fmt_type",19
+.DEFINE "status"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "flags"
+.VALUE 1
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "size"
+.VALUE 2
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "chr"
+.VALUE 3
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "type"
+.VALUE 4
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "field_width"
+.VALUE 5
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "precision"
+.VALUE 6
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "set_begin"
+.VALUE 7
+.CLASS 8
+.TYPE 34
+.ENDEF
+.DEFINE "set_end"
+.VALUE 10
+.CLASS 8
+.TYPE 34
+.ENDEF
+.DEFINE "pad_whole"
+.VALUE 13
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "pad_pre_fract"
+.VALUE 14
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "pad_post_fract"
+.VALUE 15
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "pad_at"
+.VALUE 16
+.CLASS 8
+.TYPE 34
+.ENDEF
+.ENDREC "fmt_type"
+.BEGREC "flt_info",12
+.DEFINE "flags"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "exp"
+.VALUE 1
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "digits"
+.VALUE 2
+.CLASS 8
+.DIM 10
+.TYPE 108
+.ENDEF
+.ENDREC "flt_info"
+.BEGREC "__stdio_file",1
+.DEFINE "slot"
+.VALUE 0
+.CLASS 8
+.TYPE 12
+.ENDEF
+.ENDREC "__stdio_file"
+.BEGREC "mf_font_s",22
+.DEFINE "full_name"
+.VALUE 0
+.CLASS 8
+.TYPE 194
+.ENDEF
+.DEFINE "short_name"
+.VALUE 3
+.CLASS 8
+.TYPE 194
+.ENDEF
+.DEFINE "width"
+.VALUE 6
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "height"
+.VALUE 7
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "min_x_advance"
+.VALUE 8
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "max_x_advance"
+.VALUE 9
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "baseline_x"
+.VALUE 10
+.CLASS 8
+.TYPE 2
+.ENDEF
+.DEFINE "baseline_y"
+.VALUE 11
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "line_height"
+.VALUE 12
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "flags"
+.VALUE 13
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "fallback_character"
+.VALUE 14
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "character_width"
+.VALUE 16
+.CLASS 8
+.TYPE 556
+.ENDEF
+.DEFINE "render_character"
+.VALUE 19
+.CLASS 8
+.TYPE 556
+.ENDEF
+.ENDREC "mf_font_s"
+.BEGREC "mf_font_list_s",6
+.DEFINE "next"
+.VALUE 0
+.CLASS 8
+.TAG "mf_font_list_s"
+.TYPE 200
+.ENDEF
+.DEFINE "font"
+.VALUE 3
+.CLASS 8
+.TAG "mf_font_s"
+.TYPE 200
+.ENDEF
+.ENDREC "mf_font_list_s"
+.BEGREC "mf_rlefont_char_range_s",10
+.DEFINE "first_char"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "char_count"
+.VALUE 2
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "glyph_offsets"
+.VALUE 4
+.CLASS 8
+.TYPE 205
+.ENDEF
+.DEFINE "glyph_data"
+.VALUE 7
+.CLASS 8
+.TYPE 204
+.ENDEF
+.ENDREC "mf_rlefont_char_range_s"
+.BEGREC "mf_rlefont_s",35
+.DEFINE "font"
+.VALUE 0
+.CLASS 8
+.TAG "mf_font_s"
+.TYPE 8
+.ENDEF
+.DEFINE "version"
+.VALUE 22
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "dictionary_data"
+.VALUE 23
+.CLASS 8
+.TYPE 204
+.ENDEF
+.DEFINE "dictionary_offsets"
+.VALUE 26
+.CLASS 8
+.TYPE 205
+.ENDEF
+.DEFINE "rle_entry_count"
+.VALUE 29
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "dict_entry_count"
+.VALUE 30
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "char_range_count"
+.VALUE 31
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "char_ranges"
+.VALUE 32
+.CLASS 8
+.TAG "mf_rlefont_char_range_s"
+.TYPE 200
+.ENDEF
+.ENDREC "mf_rlefont_s"
+.BEGREC "mf_scaledfont_s",27
+.DEFINE "font"
+.VALUE 0
+.CLASS 8
+.TAG "mf_font_s"
+.TYPE 8
+.ENDEF
+.DEFINE "basefont"
+.VALUE 22
+.CLASS 8
+.TAG "mf_font_s"
+.TYPE 200
+.ENDEF
+.DEFINE "x_scale"
+.VALUE 25
+.CLASS 8
+.TYPE 12
+.ENDEF
+.DEFINE "y_scale"
+.VALUE 26
+.CLASS 8
+.TYPE 12
+.ENDEF
+.ENDREC "mf_scaledfont_s"
+;    1	#include <tice.h>
+;    2	#include <graphx.h>
+;    3	#include <debug.h>
+;    4	
+;    5	#include "mcufont-decoder/mcufont.h"
+;    6	
+;    7	struct state_t {
+;    8	    uint16_t width;
+;    9	    uint16_t height;
+;   10	    uint16_t y;
+;   11	    const struct mf_font_s *font;
+;   12	};
+.BEGREC "state_t",9
+.DEFINE "width"
+.VALUE 0
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "height"
+.VALUE 2
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "y"
+.VALUE 4
+.CLASS 8
+.TYPE 13
+.ENDEF
+.DEFINE "font"
+.VALUE 6
+.CLASS 8
+.TAG "mf_font_s"
+.TYPE 200
+.ENDEF
+.ENDREC "state_t"
+;   13	
+;   14	
+;   15	typedef struct state_t state_t;
+;   16	
+;   17	/* Callback to write to a memory buffer. */
+;   18	static void pixel_callback(int16_t x, int16_t y, uint8_t count, uint8_t alpha, void *state) {
+_pixel_callback:
+.DEFINE "_pixel_callback"
+
+.VALUE _pixel_callback
+
+.CLASS 3
+
+.TYPE 65
+
+.ENDEF
+
+.BEGFUNC "pixel_callback",18,"_pixel_callback"
+
+.LINE 18
+
+.DEFINE "x"
+
+.CLASS 65
+
+.VALUE 6
+
+.TYPE 3
+
+.ENDEF
+
+.DEFINE "y"
+
+.CLASS 65
+
+.VALUE 9
+
+.TYPE 3
+
+.ENDEF
+
+.DEFINE "count"
+
+.CLASS 65
+
+.VALUE 12
+
+.TYPE 12
+
+.ENDEF
+
+.DEFINE "alpha"
+
+.CLASS 65
+
+.VALUE 15
+
+.TYPE 12
+
+.ENDEF
+
+.DEFINE "state"
+
+.CLASS 65
+
+.VALUE 18
+
+.TYPE 33
+
+.ENDEF
+
+.DEFINE "next_val"
+
+.CLASS 65
+
+.VALUE -1
+
+.TYPE 12
+
+.ENDEF
+
+.DEFINE "cur_pix"
+
+.CLASS 65
+
+.VALUE -2
+
+.TYPE 12
+
+.ENDEF
+
+.DEFINE "pixels"
+
+.CLASS 65
+
+.VALUE -5
+
+.TYPE 44
+
+.ENDEF
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+	PUSH	BC
+	DEC	SP
+	DEC	SP
+;   19	    uint32_t pos;
+;   20	    uint8_t *pixels = malloc(count);
+.LINE 20
+
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	PUSH	HL
+	CALL	_malloc
+	POP	BC
+	LD	(IX+-5),HL
+;   21	    uint8_t cur_pix;
+;   22	    uint8_t next_val;
+;   23	
+;   24	
+;   25	    if (y < 0 || y >= 240) return;
+.LINE 25
+
+	LD	HL,(IX+9)
+	CALL	__scmpzero
+	CALL	__setflag
+	JP	M,L_12
+	LD.LIS	BC,240
+	LD	HL,(IX+9)
+	OR	A,A
+	SBC.SIS	HL,BC
+	CALL	__setflag
+	JP	P,L_12
+;   26	    if (x < 0 || x + count >= 320) return;
+.LINE 26
+
+	LD	HL,(IX+6)
+	CALL	__scmpzero
+	CALL	__setflag
+	JP	M,L_12
+	LD	BC,(IX+6)
+	CALL	__stoi
+	LD	BC,HL
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	ADD	HL,BC
+	LD	BC,320
+	OR	A,A
+	SBC	HL,BC
+	CALL	__setflag
+	JP	M,L_9
+	JR	L_12
+;   27	
+;   28	
+;   29	    while (count--) {
+.LINE 29
+
+L_10:
+;   30	        cur_pix = gfx_GetPixel(x, y);
+.LINE 30
+
+	LD	C,(IX+9)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+6)
+	CALL	__stoi
+	PUSH	HL
+	CALL	_gfx_GetPixel
+	POP	BC
+	POP	BC
+	LD	(IX+-2),A
+;   31	        next_val = cur_pix + (alpha >> 4);
+.LINE 31
+
+	LD	A,(IX+15)
+	UEXT	HL
+	LD	L,A
+	LD	A,4
+	CALL	__ishrs_b
+	LD	A,L
+	ADD	A,(IX+-2)
+	LD	(IX+-1),A
+;   32	        if (next_val > 15) next_val = 15;
+.LINE 32
+
+	LD	A,15
+	CP	A,(IX+-1)
+	JR	NC,L_7
+	LD	(IX+-1),15
+L_7:
+;   33	        gfx_SetColor(next_val);
+.LINE 33
+
+	LD	C,(IX+-1)
+	LD	B,0
+	PUSH	BC
+	CALL	_gfx_SetColor
+	POP	BC
+;   34	        gfx_SetPixel(x, y);
+.LINE 34
+
+	LD	C,(IX+9)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+6)
+	CALL	__stoi
+	PUSH	HL
+	CALL	_gfx_SetPixel
+	POP	BC
+	POP	BC
+;   35	
+;   36	        x++;
+.LINE 36
+
+	LD	HL,(IX+6)
+	INC	HL
+	LD	(IX+6),L
+	LD	(IX+7),H
+;   37	    }
+L_9:
+.LINE 37
+
+	LD	A,(IX+12)
+	DEC	(IX+12)
+	OR	A,A
+	JR	NZ,L_10
+;   38	}
+L_12:
+.LINE 38
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _pixel_callback ***************************
+;Name                         Addr/Register   Size   Type
+;_gfx_SetPixel                       IMPORT  -----   function
+;_gfx_SetColor                       IMPORT  -----   function
+;_gfx_GetPixel                       IMPORT  -----   function
+;_malloc                             IMPORT  -----   function
+;pixels                                IX-5      3   variable
+;cur_pix                               IX-2      1   variable
+;next_val                              IX-1      1   variable
+;state                                IX+18      3   parameter
+;alpha                                IX+15      1   parameter
+;count                                IX+12      1   parameter
+;y                                     IX+9      2   parameter
+;x                                     IX+6      2   parameter
+
+
+; Stack Frame Size: 26 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "pixel_callback",38,"_pixel_callback"
+;   39	
+;   40	/* Callback to render characters. */
+;   41	static uint8_t character_callback(int16_t x, int16_t y, mf_char character,
+;   42	        void *state)
+;   43	{
+_character_callback:
+.DEFINE "_character_callback"
+
+.VALUE _character_callback
+
+.CLASS 3
+
+.TYPE 76
+
+.ENDEF
+
+.BEGFUNC "character_callback",43,"_character_callback"
+
+.LINE 43
+
+.DEFINE "x"
+
+.CLASS 65
+
+.VALUE 6
+
+.TYPE 3
+
+.ENDEF
+
+.DEFINE "y"
+
+.CLASS 65
+
+.VALUE 9
+
+.TYPE 3
+
+.ENDEF
+
+.DEFINE "character"
+
+.CLASS 65
+
+.VALUE 12
+
+.TYPE 13
+
+.ENDEF
+
+.DEFINE "state"
+
+.CLASS 65
+
+.VALUE 15
+
+.TYPE 33
+
+.ENDEF
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+;   44	    state_t *s = (state_t*)state;
+;   45	    return mf_render_character(s->font, x, y, character, pixel_callback, state);
+.LINE 45
+
+	LD	BC,(IX+15)
+	PUSH	BC
+	LD	BC,_pixel_callback
+	PUSH	BC
+	LD	BC,(IX+12)
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	LD	IY,(IX+15)
+	LD	BC,(IY+6)
+	PUSH	BC
+	CALL	_mf_render_character
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+;   46	}
+.LINE 46
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _character_callback ***************************
+;Name                         Addr/Register   Size   Type
+;_mf_render_character                IMPORT  -----   function
+;state                                IX+15      3   parameter
+;character                            IX+12      2   parameter
+;y                                     IX+9      2   parameter
+;x                                     IX+6      2   parameter
+
+
+; Stack Frame Size: 18 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "character_callback",46,"_character_callback"
+;   47	
+;   48	/* Callback to render lines. */
+;   49	static bool line_callback(const char *line, uint16_t count, void *state)
+;   50	{
+_line_callback:
+.DEFINE "_line_callback"
+
+.VALUE _line_callback
+
+.CLASS 3
+
+.TYPE 76
+
+.ENDEF
+
+.BEGFUNC "line_callback",50,"_line_callback"
+
+.LINE 50
+
+.DEFINE "line"
+
+.CLASS 65
+
+.VALUE 6
+
+.TYPE 194
+
+.ENDEF
+
+.DEFINE "count"
+
+.CLASS 65
+
+.VALUE 9
+
+.TYPE 13
+
+.ENDEF
+
+.DEFINE "state"
+
+.CLASS 65
+
+.VALUE 12
+
+.TYPE 33
+
+.ENDEF
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+;   51	    state_t *s = (state_t*)state;
+;   52	
+;   53	    mf_render_justified(s->font, 10, s->y,
+;   54	            s->width - 20,
+;   55	            line, count, character_callback, state);
+.LINE 55
+
+	LD	BC,(IX+12)
+	PUSH	BC
+	LD	BC,_character_callback
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	LD	IY,(IX+12)
+	LD	IY,(IY+0)
+	LEA	BC,IY+-20
+	PUSH	BC
+	LD	IY,(IX+12)
+	LD	BC,(IY+4)
+	PUSH	BC
+	LD	BC,10
+	PUSH	BC
+	LD	BC,(IY+6)
+	PUSH	BC
+	CALL	_mf_render_justified
+	LD	IY,24
+	ADD	IY,SP
+	LD	SP,IY
+;   56	    s->y += s->font->line_height;
+.LINE 56
+
+	LD	IY,(IX+12)
+	LD	IY,(IY+6)
+	LD	C,(IY+12)
+	LD	B,0
+	LD	IY,(IX+12)
+	LD	DE,(IY+4)
+	LD	HL,BC
+	ADD.SIS	HL,DE
+	LD	BC,HL
+	LD	(IY+4),C
+	LD	(IY+5),B
+;   57	    return true;
+.LINE 57
+
+	LD	A,1
+;   58	}
+.LINE 58
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _line_callback ***************************
+;Name                         Addr/Register   Size   Type
+;_mf_render_justified                IMPORT  -----   function
+;state                                IX+12      3   parameter
+;count                                 IX+9      2   parameter
+;line                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 15 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "line_callback",58,"_line_callback"
+;   59	
+;   60	/* Callback to just count the lines.
+;   61	 * Used to decide the image height */
+;   62	bool count_lines(const char *line, uint16_t count, void *state)
+;   63	{
+_count_lines:
+.DEFINE "_count_lines"
+
+.VALUE _count_lines
+
+.CLASS 2
+
+.TYPE 76
+
+.ENDEF
+
+.BEGFUNC "count_lines",63,"_count_lines"
+
+.LINE 63
+
+.DEFINE "line"
+
+.CLASS 65
+
+.VALUE 6
+
+.TYPE 194
+
+.ENDEF
+
+.DEFINE "count"
+
+.CLASS 65
+
+.VALUE 9
+
+.TYPE 13
+
+.ENDEF
+
+.DEFINE "state"
+
+.CLASS 65
+
+.VALUE 12
+
+.TYPE 33
+
+.ENDEF
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+;   64	    int *linecount = (int*)state;
+;   65	    (*linecount)++;
+.LINE 65
+
+	LD	IY,(IX+12)
+	LD	HL,(IX+12)
+	LD	BC,(IY)
+	INC	BC
+	LD	(HL),BC
+;   66	    return true;
+.LINE 66
+
+	LD	A,1
+;   67	}
+.LINE 67
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _count_lines ***************************
+;Name                         Addr/Register   Size   Type
+;state                                IX+12      3   parameter
+;count                                 IX+9      2   parameter
+;line                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 15 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "count_lines",67,"_count_lines"
+;   68	
+;   69	void fill_palette(void) {
+_fill_palette:
+.DEFINE "_fill_palette"
+
+.VALUE _fill_palette
+
+.CLASS 2
+
+.TYPE 65
+
+.ENDEF
+
+.BEGFUNC "fill_palette",69,"_fill_palette"
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+;   70	    memset(gfx_palette, 0, 256);
+.LINE 70
+
+	LD	BC,256
+	PUSH	BC
+	LD	BC,0
+	PUSH	BC
+	LD	BC,14877184
+	PUSH	BC
+	CALL	_memset
+	POP	BC
+	POP	BC
+	POP	BC
+;   71	
+;   72	    dbg_sprintf(dbgout, "palette %d\n", gfx_RGBTo1555(112, 112, 112));
+.LINE 72
+
+	LD	BC,14798
+	PUSH	BC
+	LD	BC,L__10
+	PUSH	BC
+	LD	BC,16449536
+	PUSH	BC
+	CALL	_sprintf
+	POP	BC
+	POP	BC
+	POP	BC
+;   73	    gfx_palette[0]  = gfx_RGBTo1555(243, 157, 101);
+.LINE 73
+
+	LD	HL,14877184
+	LD	(HL),108
+	INC	HL
+	LD	(HL),122
+;   74	    gfx_palette[1]  = gfx_RGBTo1555(228, 144, 89);
+.LINE 74
+
+	LD	HL,14877186
+	LD	(HL),75
+	INC	HL
+	LD	(HL),114
+;   75	    gfx_palette[2]  = gfx_RGBTo1555(214, 132, 77);
+.LINE 75
+
+	LD	HL,14877188
+	LD	(HL),9
+	INC	HL
+	LD	(HL),106
+;   76	    gfx_palette[3]  = gfx_RGBTo1555(199, 119, 65);
+.LINE 76
+
+	LD	HL,14877190
+	LD	(HL),200
+	INC	HL
+	LD	(HL),97
+;   77	    gfx_palette[4]  = gfx_RGBTo1555(185, 107, 54);
+.LINE 77
+
+	LD	HL,14877192
+	LD	(HL),166
+	INC	HL
+	LD	(HL),93
+;   78	    gfx_palette[5]  = gfx_RGBTo1555(171, 95, 42);
+.LINE 78
+
+	LD	HL,14877194
+	LD	(HL),101
+	INC	HL
+	LD	(HL),85
+;   79	    gfx_palette[6]  = gfx_RGBTo1555(157, 83, 31);
+.LINE 79
+
+	LD	HL,14877196
+	LD	(HL),67
+	INC	HL
+	LD	(HL),77
+;   80	    gfx_palette[7]  = gfx_RGBTo1555(143, 71, 19);
+.LINE 80
+
+	LD	HL,14877198
+	LD	(HL),2
+	INC	HL
+	LD	(HL),69
+;   81	    gfx_palette[8]  = gfx_RGBTo1555(129, 60, 6);
+.LINE 81
+
+	LD	HL,14877200
+	LD	(HL),224
+	INC	HL
+	LD	(HL),64
+;   82	    gfx_palette[9]  = gfx_RGBTo1555(115, 49, 0);
+.LINE 82
+
+	LD	HL,14877202
+	LD	(HL),192
+	INC	HL
+	LD	(HL),56
+;   83	    gfx_palette[10] = gfx_RGBTo1555(102, 38, 0);
+.LINE 83
+
+	LD	HL,14877204
+	LD	(HL),128
+	INC	HL
+	LD	(HL),48
+;   84	    gfx_palette[11] = gfx_RGBTo1555(89, 26, 0);
+.LINE 84
+
+	LD	HL,14877206
+	LD	(HL),96
+	INC	HL
+	LD	(HL),44
+;   85	    gfx_palette[12] = gfx_RGBTo1555(78, 14, 0);
+.LINE 85
+
+	LD	HL,14877208
+	LD	(HL),32
+	INC	HL
+	LD	(HL),36
+;   86	    gfx_palette[13] = gfx_RGBTo1555(67, 2, 0);
+.LINE 86
+
+	LD	HL,14877210
+	LD	(HL),0
+	INC	HL
+	LD	(HL),32
+;   87	    gfx_palette[14] = gfx_RGBTo1555(58, 0, 0);
+.LINE 87
+
+	LD	HL,14877212
+	LD	(HL),0
+	INC	HL
+	LD	(HL),28
+;   88	    gfx_palette[15] = gfx_RGBTo1555(0, 0, 0);
+.LINE 88
+
+	LD	HL,14877214
+	LD	(HL),0
+	INC	HL
+	LD	(HL),0
+;   89	}
+.LINE 89
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _fill_palette ***************************
+;Name                         Addr/Register   Size   Type
+;_sprintf                            IMPORT  -----   function
+;_memset                             IMPORT  -----   function
+
+
+; Stack Frame Size: 6 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "fill_palette",89,"_fill_palette"
+	SEGMENT STRSECT
+L__10:
+	DB	"palette %d"
+	DB	10,0
+	SEGMENT CODE
+;   90	
+;   91	/* Main function, called first */
+;   92	int main(void) {
+_main:
+.DEFINE "_main"
+
+.VALUE _main
+
+.CLASS 2
+
+.TYPE 68
+
+.ENDEF
+
+.BEGFUNC "main",92,"_main"
+
+.LINE 92
+
+.DEFINE "font"
+
+.CLASS 65
+
+.VALUE -3
+
+.TAG "mf_font_s"
+
+.TYPE 200
+
+.ENDEF
+
+.DEFINE "text"
+
+.CLASS 65
+
+.VALUE -6
+
+.TYPE 194
+
+.ENDEF
+
+.DEFINE "state"
+
+.CLASS 65
+
+.VALUE -15
+
+.TAG "state_t"
+
+.TYPE 8
+
+.ENDEF
+
+	PUSH	IX
+	LD	IX,0
+	ADD	IX,SP
+	LEA	HL,IX+-15
+	LD	SP,HL
+;   93	    const struct mf_font_s *font;
+;   94	    struct mf_scaledfont_s scaledfont;
+;   95	    struct state_t state;
+;   96	
+;   97	    const char *text = "I'd just like to interject for a moment. What you're referring to as TI-84, is in fact, Zilog eZ80 Toolchain/TI-84 Plus CE, or as I've recently taken to calling it, utter garbage";
+.LINE 97
+
+	LD	BC,L__12
+	LD	(IX+-6),BC
+;   98	
+;   99	    gfx_Begin();
+.LINE 99
+
+	CALL	_gfx_Begin
+;  100	    gfx_SetDrawBuffer();
+.LINE 100
+
+	LD	BC,1
+	PUSH	BC
+	CALL	_gfx_SetDraw
+	POP	BC
+;  101	
+;  102	    fill_palette();
+.LINE 102
+
+	CALL	_fill_palette
+;  103	
+;  104	    gfx_FillScreen(0);
+.LINE 104
+
+	LD	BC,0
+	PUSH	BC
+	CALL	_gfx_FillScreen
+	POP	BC
+;  105	    gfx_BlitBuffer();
+.LINE 105
+
+	LD	BC,1
+	PUSH	BC
+	CALL	_gfx_Blit
+	POP	BC
+;  106	
+;  107	    gfx_SetColor(15);
+.LINE 107
+
+	LD	BC,15
+	PUSH	BC
+	CALL	_gfx_SetColor
+	POP	BC
+;  108	
+;  109	    font = mf_find_font(mf_get_font_list()->font->short_name);
+.LINE 109
+
+	CALL	_mf_get_font_list
+	LD	IY,HL
+	LD	IY,(IY+3)
+	LD	BC,(IY+3)
+	PUSH	BC
+	CALL	_mf_find_font
+	POP	BC
+	LD	(IX+-3),HL
+;  110	
+;  111	    state.width = 320;
+.LINE 111
+
+	LD	(IX+-15),64
+	LD	(IX+-14),1
+;  112	    state.height = 240;
+.LINE 112
+
+	LD	(IX+-13),240
+	LD	(IX+-12),0
+;  113	    state.y = 2;
+.LINE 113
+
+	LD	(IX+-11),2
+	LD	(IX+-10),0
+;  114	    state.font = font;
+.LINE 114
+
+	LD	(IX+-9),HL
+;  115	
+;  116	    mf_wordwrap(font, 320, text, line_callback, &state);
+.LINE 116
+
+	PEA	IX+-15
+	LD	BC,_line_callback
+	PUSH	BC
+	LD	BC,(IX+-6)
+	PUSH	BC
+	LD	BC,320
+	PUSH	BC
+	LD	BC,(IX+-3)
+	PUSH	BC
+	CALL	_mf_wordwrap
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+;  117	    gfx_BlitBuffer();
+.LINE 117
+
+	LD	BC,1
+	PUSH	BC
+	CALL	_gfx_Blit
+	POP	BC
+;  118	
+;  119	    /* Waits for a keypress */
+;  120	    while (!os_GetCSC());
+L_19:
+.LINE 120
+
+	CALL	_os_GetCSC
+	OR	A,A
+	JR	Z,L_19
+;  121	
+;  122	    gfx_End();
+.LINE 122
+
+	CALL	_gfx_End
+;  123	
+;  124	    /* Return 0 for success */
+;  125	    return 0;
+.LINE 125
+
+	OR	A,A
+	SBC	HL,HL
+;  126	}
+.LINE 126
+
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _main ***************************
+;Name                         Addr/Register   Size   Type
+;_gfx_End                            IMPORT  -----   function
+;_os_GetCSC                          IMPORT  -----   function
+;_mf_wordwrap                        IMPORT  -----   function
+;_mf_get_font_list                   IMPORT  -----   function
+;_mf_find_font                       IMPORT  -----   function
+;_gfx_SetColor                       IMPORT  -----   function
+;_gfx_Blit                           IMPORT  -----   function
+;_gfx_FillScreen                     IMPORT  -----   function
+;_gfx_SetDraw                        IMPORT  -----   function
+;_gfx_Begin                          IMPORT  -----   function
+;state                                IX-15      9   variable
+;text                                  IX-6      3   variable
+;font                                  IX-3      3   variable
+
+
+; Stack Frame Size: 21 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+.ENDFUNC "main",126,"_main"
+	SEGMENT STRSECT
+L__12:
+	DB	"I'd just like to interject for a moment. What you're referring to as TI-84, is in fact, Zilog eZ80 Toolchain/TI-84 Plus CE, or as I've recently taken to calling it, utter garbage"
+	DB	0
+	XREF _memset:ROM
+	XREF _mf_wordwrap:ROM
+	XREF _mf_render_justified:ROM
+	XREF _mf_get_font_list:ROM
+	XREF _mf_find_font:ROM
+	XREF _mf_render_character:ROM
+	XREF _sprintf:ROM
+	XREF _gfx_Blit:ROM
+	XREF _gfx_SetDraw:ROM
+	XREF _gfx_GetPixel:ROM
+	XREF _gfx_SetPixel:ROM
+	XREF _gfx_FillScreen:ROM
+	XREF _gfx_SetColor:ROM
+	XREF _gfx_End:ROM
+	XREF _gfx_Begin:ROM
+	XREF _malloc:ROM
+	XREF _os_GetCSC:ROM
+	XREF __stoi:ROM
+	XREF __setflag:ROM
+	XREF __scmpzero:ROM
+	XREF __ishrs_b:ROM
+	XDEF _main
+	XDEF _fill_palette
+	XDEF _count_lines
+	END

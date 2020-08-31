@@ -1,0 +1,1253 @@
+; Zilog eZ80 ANSI C Compiler Release 3.4
+; -optsize -noreduceopt -nomodsect -peephole -globalopt
+; -localcse -const=ROM 
+	FILE	"SRC\MCUFONT-DECODER\MF_RLEFONT.C"
+	.assume ADL=1
+	SEGMENT CODE
+;    1	#include "mf_rlefont.h"
+;    2	
+;    3	/* Number of reserved codes before the dictionary entries. */
+;    4	#define DICT_START 24
+;    5	
+;    6	/* Special reference to mean "fill with zeros to the end of the glyph" */
+;    7	#define REF_FILLZEROS 16
+;    8	
+;    9	/* RLE codes */
+;   10	#define RLE_CODEMASK    0xC0
+;   11	#define RLE_VALMASK     0x3F
+;   12	#define RLE_ZEROS       0x00
+;   13	#define RLE_64ZEROS     0x40
+;   14	#define RLE_ONES        0x80
+;   15	#define RLE_SHADE       0xC0
+;   16	
+;   17	/* Dictionary "fill entries" for encoding bits directly. */
+;   18	#define DICT_START7BIT  4
+;   19	#define DICT_START6BIT  132
+;   20	#define DICT_START5BIT  196
+;   21	#define DICT_START4BIT  228
+;   22	#define DICT_START3BIT  244
+;   23	#define DICT_START2BIT  252
+;   24	
+;   25	/* Find a pointer to the glyph matching a given character by searching
+;   26	 * through the character ranges. If the character is not found, return
+;   27	 * pointer to the default glyph.
+;   28	 */
+;   29	static const uint8_t *find_glyph(const struct mf_rlefont_s *font,
+;   30	                                 uint16_t character)
+;   31	{
+_find_glyph:
+	LD	HL,-14
+	CALL	__frameset
+;   32	   unsigned i, index;
+;   33	   const struct mf_rlefont_char_range_s *range;
+;   34	   for (i = 0; i < font->char_range_count; i++)
+	LD	BC,0
+	LD	(IX+-3),BC
+	JR	L_5
+L_3:
+;   35	   {
+;   36	       range = &font->char_ranges[i];
+	LD	HL,(IX+-3)
+	LD	A,10
+	LD	IY,(IX+6)
+	LD	BC,(IY+32)
+	CALL	__imul_b
+	ADD	HL,BC
+	LD	(IX+-6),HL
+;   37	       index = character - range->first_char;
+	LD	IY,(IX+-6)
+	LD	DE,(IY+0)
+	LD	BC,(IX+9)
+	CALL	__stoiu
+	LD	(IX+-14),HL
+	LD	BC,DE
+	CALL	__stoiu
+	LD	BC,HL
+	LD	HL,(IX+-14)
+	OR	A,A
+	SBC	HL,BC
+	LD	(IX+-11),HL
+;   38	       if (character >= range->first_char && index < range->char_count)
+	LD	HL,(IX+9)
+	OR	A,A
+	LD	BC,DE
+	SBC.SIS	HL,BC
+	JR	C,L_4
+	LD	IY,(IX+-6)
+	LD	BC,(IY+2)
+	CALL	__stoiu
+	LD	BC,HL
+	LD	HL,(IX+-11)
+	OR	A,A
+	SBC	HL,BC
+	JR	NC,L_4
+;   39	       {
+;   40	           uint16_t offset = pgm_read_word(range->glyph_offsets + index);
+	LD	HL,(IX+-11)
+	LD	IY,(IX+-6)
+	LD	BC,(IY+4)
+	ADD	HL,HL
+	ADD	HL,BC
+	LD	BC,(HL)
+	LD	(IX+-8),C
+	LD	(IX+-7),B
+;   41	           return &range->glyph_data[offset];
+	LD	BC,(IX+-8)
+	LD	DE,(IY+7)
+	CALL	__stoiu
+	ADD	HL,DE
+	JR	L_7
+;   42	       }
+;   43	   }
+L_4:
+	LD	BC,(IX+-3)
+	INC	BC
+	LD	(IX+-3),BC
+L_5:
+	LD	IY,(IX+6)
+	LD	A,(IY+31)
+	UEXT	HL
+	LD	L,A
+	LD	BC,HL
+	LD	HL,(IX+-3)
+	OR	A,A
+	SBC	HL,BC
+	JR	C,L_3
+	OR	A,A
+;   44	
+;   45	   return 0;
+	SBC	HL,HL
+;   46	}
+L_7:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _find_glyph ***************************
+;Name                         Addr/Register   Size   Type
+;index                                IX-11      3   variable
+;offset                                IX-8      2   variable
+;range                                 IX-6      3   variable
+;i                                     IX-3      3   variable
+;character                             IX+9      2   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 26 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;   47	
+;   48	/* Structure to keep track of coordinates of the next pixel to be written,
+;   49	 * and also the bounds of the character. */
+;   50	struct renderstate_r
+;   51	{
+;   52	    int16_t x_begin;
+;   53	    int16_t x_end;
+;   54	    int16_t x;
+;   55	    int16_t y;
+;   56	    int16_t y_end;
+;   57	    mf_pixel_callback_t callback;
+;   58	    void *state;
+;   59	};
+;   60	
+;   61	/* Call the callback to write one pixel to screen, and advance to next
+;   62	 * pixel position. */
+;   63	static void write_pixels(struct renderstate_r *rstate, uint16_t count,
+;   64	                         uint8_t alpha)
+;   65	{
+_write_pixels:
+	LD	HL,-5
+	CALL	__frameset
+;   66	    uint8_t rowlen;
+;   67	    
+;   68	    /* Write row-by-row if the run spans multiple rows. */
+;   69	    while (rstate->x + count >= rstate->x_end)
+	JR	L_9
+L_10:
+;   70	    {
+;   71	        rowlen = rstate->x_end - rstate->x;
+	LD	B,(IX+-2)
+	LD	A,(IX+-5)
+	SUB	A,B
+	LD	(IX+-3),A
+;   72	        rstate->callback(rstate->x, rstate->y, rowlen, alpha, rstate->state);
+	LD	IY,(IX+6)
+	LD	DE,(IY+10)
+	LD	BC,(IY+13)
+	PUSH	BC
+	LD	C,(IX+12)
+	LD	B,0
+	PUSH	BC
+	LD	C,(IX+-3)
+	PUSH	BC
+	LD	BC,(IY+6)
+	PUSH	BC
+	LD	BC,(IX+-2)
+	PUSH	BC
+	LD	IY,DE
+	CALL	__indcall
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+;   73	        count -= rowlen;
+	LD	C,(IX+-3)
+	LD	B,0
+	LD	HL,(IX+9)
+	OR	A,A
+	SBC.SIS	HL,BC
+	LD	(IX+9),L
+	LD	(IX+10),H
+;   74	        rstate->x = rstate->x_begin;
+	LD	IY,(IX+6)
+	LD	BC,(IY+0)
+	LD	(IY+4),C
+	LD	(IY+5),B
+;   75	        rstate->y++;
+	LD	BC,(IY+6)
+	INC	BC
+	LD	(IY+6),C
+	LD	(IY+7),B
+;   76	    }
+L_9:
+	LD	IY,(IX+6)
+	LD	BC,(IY+4)
+	LD	(IX+-2),C
+	LD	(IX+-1),B
+	LD	BC,(IY+2)
+	LD	(IX+-5),C
+	LD	(IX+-4),B
+	LD	BC,(IX+9)
+	CALL	__stoiu
+	LD	DE,HL
+	LD	BC,(IX+-2)
+	CALL	__stoi
+	ADD	HL,DE
+	LD	DE,HL
+	LD	BC,(IX+-5)
+	CALL	__stoi
+	LD	BC,HL
+	LD	HL,DE
+	OR	A,A
+	SBC	HL,BC
+	CALL	__setflag
+	JP	P,L_10
+;   77	    
+;   78	    /* Write the remaining part */
+;   79	    if (count)
+	LD	HL,(IX+9)
+	CALL	__scmpzero
+	JR	Z,L_13
+;   80	    {
+;   81	        rstate->callback(rstate->x, rstate->y, count, alpha, rstate->state);
+	LD	IY,(IX+6)
+	LD	DE,(IY+10)
+	LD	BC,(IY+13)
+	PUSH	BC
+	LD	C,(IX+12)
+	LD	B,0
+	PUSH	BC
+	LD	C,(IX+9)
+	PUSH	BC
+	LD	BC,(IY+6)
+	PUSH	BC
+	LD	BC,(IX+-2)
+	PUSH	BC
+	LD	IY,DE
+	CALL	__indcall
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+;   82	        rstate->x += count;
+	LD	BC,(IX+9)
+	LD	IY,(IX+6)
+	LD	HL,(IY+4)
+	ADD.SIS	HL,BC
+	LD	BC,HL
+	LD	(IY+4),C
+	LD	(IY+5),B
+;   83	    }
+;   84	}
+L_13:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_pixels ***************************
+;Name                         Addr/Register   Size   Type
+;G_1                                   IX-5      2   variable
+;rowlen                                IX-3      1   variable
+;G_0                                   IX-2      2   variable
+;alpha                                IX+12      1   parameter
+;count                                 IX+9      2   parameter
+;rstate                                IX+6      3   parameter
+
+
+; Stack Frame Size: 20 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;   85	
+;   86	/* Skip the given number of pixels (0 alpha) */
+;   87	static void skip_pixels(struct renderstate_r *rstate, uint16_t count)
+;   88	{
+_skip_pixels:
+	LD	HL,-2
+	CALL	__frameset
+;   89	    rstate->x += count;
+	LD	BC,(IX+9)
+	LD	IY,(IX+6)
+	LD	HL,(IY+4)
+	ADD.SIS	HL,BC
+	LD	BC,HL
+	LD	(IY+4),C
+	LD	(IY+5),B
+;   90	    while (rstate->x >= rstate->x_end)
+	JR	L_15
+L_16:
+;   91	    {
+;   92	        rstate->x -= rstate->x_end - rstate->x_begin;
+	LD	IY,(IX+6)
+	LD	BC,(IY+0)
+	LD	HL,(IX+-2)
+	OR	A,A
+	SBC.SIS	HL,BC
+	LD	BC,HL
+	LD	HL,(IY+4)
+	OR	A,A
+	SBC.SIS	HL,BC
+	LD	BC,HL
+	LD	(IY+4),C
+	LD	(IY+5),B
+;   93	        rstate->y++;
+	LD	BC,(IY+6)
+	INC	BC
+	LD	(IY+6),C
+	LD	(IY+7),B
+;   94	    }
+L_15:
+	LD	IY,(IX+6)
+	LD	BC,(IY+2)
+	LD	(IX+-2),C
+	LD	(IX+-1),B
+	LD	BC,(IX+-2)
+	LD	HL,(IY+4)
+	OR	A,A
+	SBC.SIS	HL,BC
+	CALL	__setflag
+	JP	P,L_16
+;   95	}
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _skip_pixels ***************************
+;Name                         Addr/Register   Size   Type
+;G_4                                   IX-2      2   variable
+;count                                 IX+9      2   parameter
+;rstate                                IX+6      3   parameter
+
+
+; Stack Frame Size: 14 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;   96	
+;   97	/* Decode and write out a RLE-encoded dictionary entry. */
+;   98	static void write_rle_dictentry(const struct mf_rlefont_s *font,
+;   99	                                struct renderstate_r *rstate,
+;  100	                                uint8_t index)
+;  101	{
+_write_rle_dictentry:
+	LD	HL,-15
+	CALL	__frameset
+;  102	    uint16_t offset = pgm_read_word(font->dictionary_offsets + index);
+	LD	IY,(IX+6)
+	LD	BC,(IY+26)
+	LD	(IX+-6),BC
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	ADD	HL,HL
+	LD	BC,(IX+-6)
+	ADD	HL,BC
+	LD	(IX+-3),HL
+	LD	BC,(HL)
+	LD	(IX+-13),C
+	LD	(IX+-12),B
+;  103	    uint16_t length = pgm_read_word(font->dictionary_offsets + index + 1) - offset;
+	LD	IY,(IX+-3)
+	LEA	HL,IY+2
+	LD	HL,(HL)
+	LD	BC,(IX+-13)
+	OR	A,A
+	SBC.SIS	HL,BC
+	LD	(IX+-15),L
+	LD	(IX+-14),H
+;  104	    uint16_t i;
+;  105	    
+;  106	    for (i = 0; i < length; i++)
+	LD	(IX+-9),0
+	LD	(IX+-8),0
+	JR	L_28
+L_26:
+;  107	    {
+;  108	        uint8_t code = pgm_read_byte(font->dictionary_data + offset + i);
+	LD	BC,(IX+-13)
+	LD	IY,(IX+6)
+	LD	DE,(IY+23)
+	CALL	__stoiu
+	ADD	HL,DE
+	LD	DE,HL
+	LD	BC,(IX+-9)
+	CALL	__stoiu
+	ADD	HL,DE
+	LD	A,(HL)
+	LD	(IX+-7),A
+;  109	        if ((code & RLE_CODEMASK) == RLE_ZEROS)
+	AND	A,192
+	JR	NZ,L_25
+;  110	        {
+;  111	            skip_pixels(rstate, code & RLE_VALMASK);
+	LD	C,(IX+-7)
+	LD	B,0
+	LD	HL,BC
+	LD	A,L
+	AND	A,63
+	LD	C,A
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_skip_pixels
+	POP	BC
+	POP	BC
+;  112	        }
+;  113	        else if ((code & RLE_CODEMASK) == RLE_64ZEROS)
+	JR	L_27
+L_25:
+	LD	A,(IX+-7)
+	AND	A,192
+	CP	A,64
+	JR	NZ,L_23
+;  114	        {
+;  115	            skip_pixels(rstate, ((code & RLE_VALMASK) + 1) * 64);
+	LD	C,(IX+-7)
+	LD	B,0
+	LD	HL,BC
+	LD	A,L
+	AND	A,63
+	LD	C,A
+	INC	BC
+	LD	HL,BC
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	ADD	HL,HL
+	PUSH	HL
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_skip_pixels
+	POP	BC
+	POP	BC
+;  116	        }
+;  117	        else if ((code & RLE_CODEMASK) == RLE_ONES)
+	JR	L_27
+L_23:
+	LD	A,(IX+-7)
+	AND	A,192
+	CP	A,128
+	JR	NZ,L_21
+;  118	        {
+;  119	            write_pixels(rstate, (code & RLE_VALMASK) + 1, 255);
+	LD	BC,255
+	PUSH	BC
+	LD	C,(IX+-7)
+	LD	B,0
+	LD	HL,BC
+	LD	A,L
+	AND	A,63
+	LD	C,A
+	INC	BC
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_write_pixels
+	POP	BC
+	POP	BC
+	POP	BC
+;  120	        }
+;  121	        else if ((code & RLE_CODEMASK) == RLE_SHADE)
+	JR	L_27
+L_21:
+	LD	A,(IX+-7)
+	AND	A,192
+	CP	A,192
+	JR	NZ,L_27
+;  122	        {
+;  123	            uint8_t count, alpha;
+;  124	            count = ((code & RLE_VALMASK) >> 4) + 1;
+	LD	A,(IX+-7)
+	SRL	A
+	SRL	A
+	SRL	A
+	SRL	A
+	AND	A,3
+	LD	L,A
+	INC	L
+	LD	(IX+-10),L
+;  125	            alpha = ((code & RLE_VALMASK) & 0xF) * 0x11;
+	LD	A,(IX+-7)
+	AND	A,63
+	AND	A,15
+	LD	B,A
+	LD	C,17
+	MLT	BC
+	LD	(IX+-11),C
+;  126	            write_pixels(rstate, count, alpha);
+	LD	B,0
+	PUSH	BC
+	LD	C,(IX+-10)
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_write_pixels
+	POP	BC
+	POP	BC
+	POP	BC
+;  127	        }
+;  128	    }
+L_27:
+	LD	HL,(IX+-9)
+	INC	HL
+	LD	(IX+-9),L
+	LD	(IX+-8),H
+L_28:
+	LD	BC,(IX+-15)
+	LD	HL,(IX+-9)
+	OR	A,A
+	SBC.SIS	HL,BC
+	JR	C,L_26
+;  129	}
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_rle_dictentry ***************************
+;Name                         Addr/Register   Size   Type
+;length                               IX-15      2   variable
+;offset                               IX-13      2   variable
+;alpha                                IX-11      1   variable
+;count                                IX-10      1   variable
+;i                                     IX-9      2   variable
+;code                                  IX-7      1   variable
+;index                                IX+12      1   parameter
+;rstate                                IX+9      3   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 30 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  130	
+;  131	/* Get bit count for the "fill entries" */
+;  132	static uint8_t fillentry_bitcount(uint8_t index)
+;  133	{
+_fillentry_bitcount:
+	CALL	__frameset0
+;  134	    if (index >= DICT_START2BIT)
+	LD	A,(IX+6)
+	CP	A,252
+	JR	C,L_39
+;  135	        return 2;
+	LD	A,2
+	JR	L_40
+;  136	    else if (index >= DICT_START3BIT)
+L_39:
+	LD	A,(IX+6)
+	CP	A,244
+	JR	C,L_37
+;  137	        return 3;
+	LD	A,3
+	JR	L_40
+;  138	    else if (index >= DICT_START4BIT)
+L_37:
+	LD	A,(IX+6)
+	CP	A,228
+	JR	C,L_35
+;  139	        return 4;
+	LD	A,4
+	JR	L_40
+;  140	    else if (index >= DICT_START5BIT)
+L_35:
+	LD	A,(IX+6)
+	CP	A,196
+	JR	C,L_33
+;  141	        return 5;
+	LD	A,5
+	JR	L_40
+;  142	    else if (index >= DICT_START6BIT)
+L_33:
+	LD	A,(IX+6)
+	CP	A,132
+	JR	C,L_31
+;  143	        return 6;
+	LD	A,6
+	JR	L_40
+;  144	    else
+L_31:
+;  145	        return 7;
+	LD	A,7
+;  146	}
+L_40:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _fillentry_bitcount ***************************
+;Name                         Addr/Register   Size   Type
+;index                                 IX+6      1   parameter
+
+
+; Stack Frame Size: 9 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  147	
+;  148	/* Decode and write out a direct binary codeword */
+;  149	static void write_bin_codeword(const struct mf_rlefont_s *font,
+;  150	                                struct renderstate_r *rstate,
+;  151	                                uint8_t code)
+;  152	{
+_write_bin_codeword:
+	LD	HL,-3
+	CALL	__frameset
+;  153	    uint8_t bitcount = fillentry_bitcount(code);
+	LD	C,(IX+12)
+	LD	B,0
+	PUSH	BC
+	CALL	_fillentry_bitcount
+	POP	BC
+	LD	(IX+-3),A
+;  154	    uint8_t byte = code - DICT_START7BIT;
+	LD	A,(IX+12)
+	SUB	A,4
+	LD	(IX+-2),A
+;  155	    uint8_t runlen = 0;
+	LD	(IX+-1),0
+;  156	    
+;  157	    while (bitcount--)
+	JR	L_48
+L_49:
+;  158	    {
+;  159	        if (byte & 1)
+	LD	A,(IX+-2)
+	AND	A,1
+	JR	Z,L_46
+;  160	        {
+;  161	            runlen++;
+	INC	(IX+-1)
+;  162	        }
+;  163	        else 
+	JR	L_47
+L_46:
+;  164	        {
+;  165	            if (runlen)
+	LD	A,(IX+-1)
+	OR	A,A
+	JR	Z,L_44
+;  166	            {
+;  167	                write_pixels(rstate, runlen, 255);
+	LD	BC,255
+	PUSH	BC
+	LD	C,(IX+-1)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_write_pixels
+	POP	BC
+	POP	BC
+	POP	BC
+;  168	                runlen = 0;
+	LD	(IX+-1),0
+;  169	            }
+L_44:
+;  170	            
+;  171	            skip_pixels(rstate, 1);
+	LD	BC,1
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_skip_pixels
+	POP	BC
+	POP	BC
+;  172	        }
+L_47:
+;  173	        
+;  174	        byte >>= 1;
+	LD	A,(IX+-2)
+	UEXT	HL
+	LD	L,A
+	LD	A,1
+	CALL	__ishrs_b
+	LD	(IX+-2),L
+;  175	    }
+L_48:
+	LD	A,(IX+-3)
+	DEC	(IX+-3)
+	OR	A,A
+	JR	NZ,L_49
+;  176	    
+;  177	    if (runlen)
+	LD	A,(IX+-1)
+	OR	A,A
+	JR	Z,L_52
+;  178	        write_pixels(rstate, runlen, 255);
+	LD	BC,255
+	PUSH	BC
+	LD	C,(IX+-1)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_write_pixels
+	POP	BC
+	POP	BC
+	POP	BC
+;  179	}
+L_52:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_bin_codeword ***************************
+;Name                         Addr/Register   Size   Type
+;bitcount                              IX-3      1   variable
+;byte                                  IX-2      1   variable
+;runlen                                IX-1      1   variable
+;code                                 IX+12      1   parameter
+;rstate                                IX+9      3   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 18 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  180	
+;  181	/* Decode and write out a reference codeword */
+;  182	static void write_ref_codeword(const struct mf_rlefont_s *font,
+;  183	                                struct renderstate_r *rstate,
+;  184	                                uint8_t code)
+;  185	{
+_write_ref_codeword:
+	CALL	__frameset0
+;  186	    if (code == 0)
+	LD	A,(IX+12)
+	OR	A,A
+	JR	NZ,L_62
+;  187	    {
+;  188	        skip_pixels(rstate, 1);
+	LD	BC,1
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_skip_pixels
+	POP	BC
+	POP	BC
+;  189	    }
+;  190	    else if (code <= 15)
+	JR	L_63
+L_62:
+	LD	A,15
+	CP	A,(IX+12)
+	JR	C,L_60
+;  191	    {
+;  192	        write_pixels(rstate, 1, 0x11 * code);
+	LD	B,17
+	LD	C,(IX+12)
+	MLT	BC
+	LD	B,0
+	PUSH	BC
+	LD	BC,1
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	CALL	_write_pixels
+	POP	BC
+	POP	BC
+	POP	BC
+;  193	    }
+;  194	    else if (code == REF_FILLZEROS)
+	JR	L_63
+L_60:
+	LD	A,(IX+12)
+	CP	A,16
+	JR	NZ,L_58
+;  195	    {
+;  196	        /* Fill with zeroes to end */
+;  197	        rstate->y = rstate->y_end;
+	LD	IY,(IX+9)
+	LD	BC,(IY+8)
+	LD	(IY+6),C
+	LD	(IY+7),B
+;  198	    }
+;  199	    else if (code < DICT_START)
+	JR	L_63
+L_58:
+	LD	A,(IX+12)
+	CP	A,24
+	JR	C,L_63
+;  200	    {
+;  201	        /* Reserved */
+;  202	    }
+;  203	    else if (code < DICT_START + font->rle_entry_count)
+	LD	IY,(IX+6)
+	LD	A,(IY+29)
+	UEXT	HL
+	LD	L,A
+	LD	IY,HL
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	OR	A,A
+	LEA	BC,IY+24
+	SBC	HL,BC
+	JP	P,L_54
+;  204	    {
+;  205	        write_rle_dictentry(font, rstate, code - DICT_START);
+	LD	A,(IX+12)
+	SUB	A,24
+	LD	C,A
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_rle_dictentry
+	POP	BC
+	POP	BC
+	POP	BC
+;  206	    }
+;  207	    else
+	JR	L_63
+L_54:
+;  208	    {
+;  209	        write_bin_codeword(font, rstate, code);
+	LD	C,(IX+12)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_bin_codeword
+	POP	BC
+	POP	BC
+	POP	BC
+;  210	    }
+;  211	}
+L_63:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_ref_codeword ***************************
+;Name                         Addr/Register   Size   Type
+;code                                 IX+12      1   parameter
+;rstate                                IX+9      3   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 15 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  212	
+;  213	/* Decode and write out a reference encoded dictionary entry. */
+;  214	static void write_ref_dictentry(const struct mf_rlefont_s *font,
+;  215	                                struct renderstate_r *rstate,
+;  216	                                uint8_t index)
+;  217	{
+_write_ref_dictentry:
+	LD	HL,-13
+	CALL	__frameset
+;  218	    uint16_t offset = pgm_read_word(font->dictionary_offsets + index);
+	LD	IY,(IX+6)
+	LD	BC,(IY+26)
+	LD	(IX+-6),BC
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	ADD	HL,HL
+	LD	BC,(IX+-6)
+	ADD	HL,BC
+	LD	(IX+-3),HL
+	LD	BC,(HL)
+	LD	(IX+-10),C
+	LD	(IX+-9),B
+;  219	    uint16_t length = pgm_read_word(font->dictionary_offsets + index + 1) - offset;
+	LD	IY,(IX+-3)
+	LEA	HL,IY+2
+	LD	HL,(HL)
+	LD	BC,(IX+-10)
+	OR	A,A
+	SBC.SIS	HL,BC
+	LD	(IX+-13),L
+	LD	(IX+-12),H
+;  220	    uint16_t i;
+;  221	    
+;  222	    for (i = 0; i < length; i++)
+	LD	(IX+-8),0
+	LD	(IX+-7),0
+	JR	L_67
+L_65:
+;  223	    {
+;  224	        uint8_t code = pgm_read_byte(font->dictionary_data + offset + i);
+	LD	BC,(IX+-10)
+	LD	IY,(IX+6)
+	LD	DE,(IY+23)
+	CALL	__stoiu
+	ADD	HL,DE
+	LD	DE,HL
+	LD	BC,(IX+-8)
+	CALL	__stoiu
+	ADD	HL,DE
+	LD	A,(HL)
+	LD	(IX+-11),A
+;  225	        write_ref_codeword(font, rstate, code);
+	LD	C,(IX+-11)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_ref_codeword
+	POP	BC
+	POP	BC
+	POP	BC
+	LD	HL,(IX+-8)
+	INC	HL
+	LD	(IX+-8),L
+	LD	(IX+-7),H
+;  226	    }
+L_67:
+	LD	BC,(IX+-13)
+	LD	HL,(IX+-8)
+	OR	A,A
+	SBC.SIS	HL,BC
+	JR	C,L_65
+;  227	}
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_ref_dictentry ***************************
+;Name                         Addr/Register   Size   Type
+;length                               IX-13      2   variable
+;code                                 IX-11      1   variable
+;offset                               IX-10      2   variable
+;i                                     IX-8      2   variable
+;index                                IX+12      1   parameter
+;rstate                                IX+9      3   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 28 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  228	
+;  229	/* Decode and write out an arbitrary glyph codeword */
+;  230	static void write_glyph_codeword(const struct mf_rlefont_s *font,
+;  231	                                struct renderstate_r *rstate,
+;  232	                                uint8_t code)
+;  233	{
+_write_glyph_codeword:
+	CALL	__frameset0
+;  234	    if (code >= DICT_START + font->rle_entry_count &&
+	LD	IY,(IX+6)
+	LD	A,(IY+29)
+	UEXT	HL
+	LD	L,A
+	LD	IY,HL
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	OR	A,A
+	LEA	BC,IY+24
+	SBC	HL,BC
+	CALL	__setflag
+	JP	M,L_71
+;  235	        code < DICT_START + font->dict_entry_count)
+	LD	IY,(IX+6)
+	LD	A,(IY+30)
+	UEXT	HL
+	LD	L,A
+	LD	IY,HL
+	LD	A,(IX+12)
+	UEXT	HL
+	LD	L,A
+	OR	A,A
+	LEA	BC,IY+24
+	SBC	HL,BC
+	CALL	__setflag
+	JP	P,L_71
+;  236	    {
+;  237	        write_ref_dictentry(font, rstate, code - DICT_START);
+	LD	A,(IX+12)
+	SUB	A,24
+	LD	C,A
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_ref_dictentry
+	POP	BC
+	POP	BC
+	POP	BC
+;  238	    }
+;  239	    else
+	JR	L_72
+L_71:
+;  240	    {
+;  241	        write_ref_codeword(font, rstate, code);
+	LD	C,(IX+12)
+	LD	B,0
+	PUSH	BC
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_ref_codeword
+	POP	BC
+	POP	BC
+	POP	BC
+;  242	    }
+;  243	}
+L_72:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _write_glyph_codeword ***************************
+;Name                         Addr/Register   Size   Type
+;code                                 IX+12      1   parameter
+;rstate                                IX+9      3   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 15 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  244	
+;  245	
+;  246	uint8_t mf_rlefont_render_character(const struct mf_font_s *font,
+;  247	                                    int16_t x0, int16_t y0,
+;  248	                                    uint16_t character,
+;  249	                                    mf_pixel_callback_t callback,
+;  250	                                    void *state)
+;  251	{
+_mf_rlefont_render_character:
+	LD	HL,-23
+	CALL	__frameset
+;  252	    const uint8_t *p;
+;  253	    uint8_t width;
+;  254	    
+;  255	    struct renderstate_r rstate;
+;  256	    rstate.x_begin = x0;
+	LD	BC,(IX+9)
+	LD	(IX+-20),C
+	LD	(IX+-19),B
+;  257	    rstate.x_end = x0 + font->width;
+	LD	IY,(IX+6)
+	LD	C,(IY+6)
+	LD	B,0
+	LD	HL,BC
+	LD	BC,(IX+9)
+	ADD.SIS	HL,BC
+	LD	(IX+-18),L
+	LD	(IX+-17),H
+;  258	    rstate.x = x0;
+	LD	BC,(IX+9)
+	LD	(IX+-16),C
+	LD	(IX+-15),B
+;  259	    rstate.y = y0;
+	LD	BC,(IX+12)
+	LD	(IX+-14),C
+	LD	(IX+-13),B
+;  260	    rstate.y_end = y0 + font->height;
+	LD	C,(IY+7)
+	LD	B,0
+	LD	HL,BC
+	LD	BC,(IX+12)
+	ADD.SIS	HL,BC
+	LD	(IX+-12),L
+	LD	(IX+-11),H
+;  261	    rstate.callback = callback;
+	LD	BC,(IX+18)
+	LD	(IX+-10),BC
+;  262	    rstate.state = state;
+	LD	BC,(IX+21)
+	LD	(IX+-7),BC
+;  263	    
+;  264	    p = find_glyph((struct mf_rlefont_s*)font, character);
+	LD	BC,(IX+15)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_find_glyph
+	POP	BC
+	POP	BC
+	LD	(IX+-3),HL
+;  265	    if (!p)
+	CALL	__icmpzero
+	JR	NZ,L_75
+;  266	        return 0;
+	XOR	A,A
+	JR	L_80
+L_75:
+;  267	    
+;  268	    width = pgm_read_byte(p++);
+	LD	HL,(IX+-3)
+	LD	A,(HL)
+	LD	(IX+-4),A
+	LD	BC,(IX+-3)
+	INC	BC
+	LD	(IX+-3),BC
+;  269	    while (rstate.y < rstate.y_end)
+	JR	L_77
+L_78:
+;  270	    {
+;  271	        write_glyph_codeword((struct mf_rlefont_s*)font, &rstate, pgm_read_byte(p++));
+	LD	BC,(IX+-3)
+	LD	(IX+-23),BC
+	LD	BC,(IX+-3)
+	INC	BC
+	LD	(IX+-3),BC
+	LD	HL,(IX+-23)
+	LD	C,(HL)
+	LD	B,0
+	PUSH	BC
+	PEA	IX+-20
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_write_glyph_codeword
+	POP	BC
+	POP	BC
+	POP	BC
+;  272	    }
+L_77:
+	LD	BC,(IX+-12)
+	LD	HL,(IX+-14)
+	OR	A,A
+	SBC.SIS	HL,BC
+	CALL	__setflag
+	JP	M,L_78
+;  273	    
+;  274	    return width;
+	LD	A,(IX+-4)
+;  275	}
+L_80:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _mf_rlefont_render_character ***************************
+;Name                         Addr/Register   Size   Type
+;rstate                               IX-20     16   variable
+;width                                 IX-4      1   variable
+;p                                     IX-3      3   variable
+;state                                IX+21      3   parameter
+;callback                             IX+18      3   parameter
+;character                            IX+15      2   parameter
+;y0                                   IX+12      2   parameter
+;x0                                    IX+9      2   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 47 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+;  276	
+;  277	uint8_t mf_rlefont_character_width(const struct mf_font_s *font,
+;  278	                                   uint16_t character)
+;  279	{
+_mf_rlefont_character_width:
+	LD	HL,-3
+	CALL	__frameset
+;  280	    const uint8_t *p;
+;  281	    p = find_glyph((struct mf_rlefont_s*)font, character);
+	LD	BC,(IX+9)
+	PUSH	BC
+	LD	BC,(IX+6)
+	PUSH	BC
+	CALL	_find_glyph
+	POP	BC
+	POP	BC
+	LD	(IX+-3),HL
+;  282	    if (!p)
+	CALL	__icmpzero
+	JR	NZ,L_82
+;  283	        return 0;
+	XOR	A,A
+	JR	L_83
+L_82:
+;  284	    
+;  285	    return pgm_read_byte(p);
+	LD	HL,(IX+-3)
+	LD	A,(HL)
+;  286	}
+L_83:
+	LD	SP,IX
+	POP	IX
+	RET	
+
+
+;**************************** _mf_rlefont_character_width ***************************
+;Name                         Addr/Register   Size   Type
+;p                                     IX-3      3   variable
+;character                             IX+9      2   parameter
+;font                                  IX+6      3   parameter
+
+
+; Stack Frame Size: 15 (bytes)
+;       Spill Code: 0 (instruction)
+
+
+	XREF __indcall:ROM
+	XREF __stoi:ROM
+	XREF __stoiu:ROM
+	XREF __frameset0:ROM
+	XREF __frameset:ROM
+	XREF __setflag:ROM
+	XREF __scmpzero:ROM
+	XREF __icmpzero:ROM
+	XREF __imul_b:ROM
+	XREF __ishrs_b:ROM
+	XDEF _mf_rlefont_character_width
+	XDEF _mf_rlefont_render_character
+	END

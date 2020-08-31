@@ -6,10 +6,10 @@ libs     D1A9EF D1AA22            33h
 startup  D1AA22 D1AA61            3Fh
 cleanup  D1AA61 D1AA75            14h
 exit     D1AA75 D1AA7B             6h
-code     D1AA7B D1CD3C          22C1h
-data     D1CD3C D1CD61            25h
-strsect  D1CD61 D1CE41            E0h
-text     D1CE41 D1E3E3          15A2h
+code     D1AA7B D1CD00          2285h
+data     D1CD00 D1CD25            25h
+strsect  D1CD25 D1CDF9            D4h
+text     D1CDF9 D1E39B          15A2h
 bss      D031F6 D031FC D13FD6      6h
 header   D1A87F D1A882             3h
 
@@ -174,7 +174,6 @@ __scmpzero                   = 000204
 __setflag                    = 000218
 __smulu                      = 000228
 __sor                        = 000234
-_sprintf                     = 0000BC
 __sshl_b                     = 000240
 __sshl_b                     = 000244
 __stoi                       = 000260
@@ -191,24 +190,24 @@ _exit                        = D1AA77
 __exit                       = D1AA50
 __exitsp                     = D1AA50
 __errsp                      = D1AA50
-_main                        = D1AE23
-_fill_palette                = D1AD59
-_count_lines                 = D1AD3D
-_mf_rewind                   = D1B012
-_mf_getchar                  = D1AED3
-_mf_get_font_list            = D1B379
-_mf_find_font                = D1B318
-_mf_character_whitespace     = D1B1D3
-_mf_character_width          = D1B0CA
-_mf_render_character         = D1B05E
-_mf_rlefont_DejaVuSans12     = D1E38E
-_mf_render_justified         = D1BA34
-_mf_render_aligned           = D1B8AB
-_mf_get_string_width         = D1B4B8
-_mf_compute_kerning          = D1BE09
-_mf_rlefont_character_width  = D1C676
-_mf_rlefont_render_character = D1C5BA
-_mf_wordwrap                 = D1CBDD
+_main                        = D1ADEC
+_fill_palette                = D1AD45
+_count_lines                 = D1AD2F
+_mf_rewind                   = D1AFD6
+_mf_getchar                  = D1AE97
+_mf_get_font_list            = D1B33D
+_mf_find_font                = D1B2DC
+_mf_character_whitespace     = D1B197
+_mf_character_width          = D1B08E
+_mf_render_character         = D1B022
+_mf_rlefont_DejaVuSans12     = D1E346
+_mf_render_justified         = D1B9F8
+_mf_render_aligned           = D1B86F
+_mf_get_string_width         = D1B47C
+_mf_compute_kerning          = D1BDCD
+_mf_rlefont_character_width  = D1C63A
+_mf_rlefont_render_character = D1C57E
+_mf_wordwrap                 = D1CBA1
 _gfx_Begin                   = D1AA02
 _gfx_End                     = D1AA06
 _gfx_SetColor                = D1AA0A

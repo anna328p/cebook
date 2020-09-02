@@ -1,14 +1,19 @@
 #include <tice.h>
+#include <fileioc.h>
 #include <graphx.h>
 #include <debug.h>
 
 #include "mcufont-decoder/mcufont.h"
+
+#define MAX_LINES 15
 
 struct state_t {
     uint16_t width;
     uint16_t height;
     uint16_t y;
     const struct mf_font_s *font;
+    uint24_t charnum;
+    uint8_t current_line;
 };
 
 
@@ -16,60 +21,37 @@ typedef struct state_t state_t;
 
 /* Callback to write to a memory buffer. */
 static void pixel_callback(int16_t x, int16_t y, uint8_t count, uint8_t alpha, void *state) {
-    uint32_t pos;
-    uint8_t *pixels = malloc(count);
-    uint8_t cur_pix;
-    uint8_t next_val;
-
-
-    if (y < 0 || y >= 240) return;
-    if (x < 0 || x + count >= 320) return;
-
-
-    while (count--) {
-        cur_pix = gfx_GetPixel(x, y);
-        next_val = cur_pix + (alpha >> 4);
-        if (next_val > 15) next_val = 15;
-        gfx_SetColor(next_val);
-        gfx_SetPixel(x, y);
-
-        x++;
-    }
+    while (count--) gfx_vbuffer[y][x++] = alpha >> 4;
 }
 
 /* Callback to render characters. */
-static uint8_t character_callback(int16_t x, int16_t y, mf_char character,
-        void *state)
-{
+static uint8_t character_callback(int16_t x, int16_t y, mf_char character, void *state) {
     state_t *s = (state_t*)state;
+    s->charnum++;
     return mf_render_character(s->font, x, y, character, pixel_callback, state);
 }
 
 /* Callback to render lines. */
-static bool line_callback(const char *line, uint16_t count, void *state)
-{
+static bool line_callback(const char *line, uint16_t count, void *state) {
     state_t *s = (state_t*)state;
 
-    mf_render_justified(s->font, 10, s->y,
-            s->width - 20,
-            line, count, character_callback, state);
-    s->y += s->font->line_height;
-    return true;
-}
+    if (s->current_line > MAX_LINES) return 0;
 
-/* Callback to just count the lines.
- * Used to decide the image height */
-bool count_lines(const char *line, uint16_t count, void *state)
-{
-    int *linecount = (int*)state;
-    (*linecount)++;
+    dbg_sprintf(dbgout, "line %d\n", s->current_line);
+
+    mf_render_justified(s->font, 10, s->y, s->width - 20,
+            line, count, character_callback, state);
+    s->current_line++;
+    s->y += s->font->line_height;
+
+    gfx_BlitBuffer();
+
     return true;
 }
 
 void fill_palette(void) {
     memset(gfx_palette, 0, 256);
 
-    dbg_sprintf(dbgout, "palette %d\n", gfx_RGBTo1555(112, 112, 112));
     gfx_palette[0]  = gfx_RGBTo1555(243, 157, 101);
     gfx_palette[1]  = gfx_RGBTo1555(228, 144, 89);
     gfx_palette[2]  = gfx_RGBTo1555(214, 132, 77);
@@ -88,13 +70,34 @@ void fill_palette(void) {
     gfx_palette[15] = gfx_RGBTo1555(0, 0, 0);
 }
 
+#define CHUNK_SIZE 1024
+
+
 /* Main function, called first */
 int main(void) {
-    const struct mf_font_s *font;
+    struct mf_font_s const *font;
     struct mf_scaledfont_s scaledfont;
     struct state_t state;
 
-    const char *text = "I'd just like to interject for a moment. What you're referring to as TI-84, is in fact, Zilog eZ80 Toolchain/TI-84 Plus CE, or as I've recently taken to calling it, utter garbage";
+    char const *text = "Welcome to CEbook!\n\nPress [MODE] to open the menu.";
+
+    ti_var_t cur_book;
+    char *book_text;
+    int num_read = 0;
+    
+    ti_CloseAll();
+
+    book_text = calloc(CHUNK_SIZE + 1, 1);
+    cur_book = ti_Open("Alice", "r");
+
+    dbg_sprintf(dbgout, "slot size %d pos %d\n",
+            ti_GetSize(cur_book), ti_Tell(cur_book));
+
+    num_read = ti_Read(book_text, CHUNK_SIZE, 1, cur_book); /* = 64 */
+    dbg_sprintf(dbgout, "read %d chunks of %d bytes (%d)\n",
+            num_read, CHUNK_SIZE, num_read * CHUNK_SIZE);
+
+    dbg_sprintf(dbgout, book_text);
 
     gfx_Begin();
     gfx_SetDrawBuffer();
@@ -110,16 +113,30 @@ int main(void) {
 
     state.width = 320;
     state.height = 240;
-    state.y = 2;
+    state.y = 5;
     state.font = font;
 
-    mf_wordwrap(font, 320, text, line_callback, &state);
+    state.current_line = 0;
+    state.charnum = 0;
+    mf_wordwrap(font, 300, book_text + state.charnum, line_callback, &state);
+    gfx_BlitBuffer();
+
+    /* Waits for a keypress */
+    while (!os_GetCSC());
+
+    gfx_FillScreen(0);
+
+    state.y = 5;
+    state.current_line = 0;
+    mf_wordwrap(font, 300, book_text + state.charnum, line_callback, &state);
     gfx_BlitBuffer();
 
     /* Waits for a keypress */
     while (!os_GetCSC());
 
     gfx_End();
+
+    free(book_text);
 
     /* Return 0 for success */
     return 0;

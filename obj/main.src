@@ -5,128 +5,60 @@
 	.assume ADL=1
 	SEGMENT CODE
 ;    1	#include <tice.h>
-;    2	#include <graphx.h>
-;    3	#include <debug.h>
-;    4	
-;    5	#include "mcufont-decoder/mcufont.h"
-;    6	
-;    7	struct state_t {
-;    8	    uint16_t width;
-;    9	    uint16_t height;
-;   10	    uint16_t y;
-;   11	    const struct mf_font_s *font;
-;   12	};
-;   13	
-;   14	
-;   15	typedef struct state_t state_t;
-;   16	
-;   17	/* Callback to write to a memory buffer. */
-;   18	static void pixel_callback(int16_t x, int16_t y, uint8_t count, uint8_t alpha, void *state) {
+;    2	#include <fileioc.h>
+;    3	#include <graphx.h>
+;    4	#include <debug.h>
+;    5	
+;    6	#include "mcufont-decoder/mcufont.h"
+;    7	
+;    8	#define MAX_LINES 15
+;    9	
+;   10	struct state_t {
+;   11	    uint16_t width;
+;   12	    uint16_t height;
+;   13	    uint16_t y;
+;   14	    const struct mf_font_s *font;
+;   15	    uint24_t charnum;
+;   16	    uint8_t current_line;
+;   17	};
+;   18	
+;   19	
+;   20	typedef struct state_t state_t;
+;   21	
+;   22	/* Callback to write to a memory buffer. */
+;   23	static void pixel_callback(int16_t x, int16_t y, uint8_t count, uint8_t alpha, void *state) {
 _pixel_callback:
-	LD	HL,-5
-	CALL	__frameset
-;   19	    uint32_t pos;
-;   20	    uint8_t *pixels = malloc(count);
-	LD	A,(IX+12)
-	UEXT	HL
-	LD	L,A
-	PUSH	HL
-	CALL	_malloc
-	POP	BC
-	LD	(IX+-5),HL
-;   21	    uint8_t cur_pix;
-;   22	    uint8_t next_val;
-;   23	
-;   24	
-;   25	    if (y < 0 || y >= 240) return;
-	LD	HL,(IX+9)
-	CALL	__scmpzero
-	CALL	__setflag
-	JP	M,L_12
-	LD.LIS	BC,240
-	LD	HL,(IX+9)
-	OR	A,A
-	SBC.SIS	HL,BC
-	CALL	__setflag
-	JP	P,L_12
-;   26	    if (x < 0 || x + count >= 320) return;
-	LD	HL,(IX+6)
-	CALL	__scmpzero
-	CALL	__setflag
-	JP	M,L_12
-	LD	BC,(IX+6)
-	CALL	__stoi
-	LD	BC,HL
-	LD	A,(IX+12)
-	UEXT	HL
-	LD	L,A
-	ADD	HL,BC
-	OR	A,A
-	LD	BC,320
-	SBC	HL,BC
-	CALL	__setflag
-	JP	M,L_9
-	JR	L_12
-;   27	
-;   28	
-;   29	    while (count--) {
-L_10:
-;   30	        cur_pix = gfx_GetPixel(x, y);
-	LD	C,(IX+9)
-	LD	B,0
-	PUSH	BC
-	LD	BC,(IX+6)
-	CALL	__stoi
-	PUSH	HL
-	CALL	_gfx_GetPixel
-	POP	BC
-	POP	BC
-	LD	(IX+-2),A
-;   31	        next_val = cur_pix + (alpha >> 4);
+	CALL	__frameset0
+;   24	    while (count--) gfx_vbuffer[y][x++] = alpha >> 4;
+	JR	L_2
+L_3:
 	LD	A,(IX+15)
 	UEXT	HL
 	LD	L,A
 	LD	A,4
 	CALL	__ishrs_b
 	LD	A,L
-	ADD	A,(IX+-2)
-	LD	(IX+-1),A
-;   32	        if (next_val > 15) next_val = 15;
-	LD	A,15
-	CP	A,(IX+-1)
-	JR	NC,L_7
-	LD	(IX+-1),15
-L_7:
-;   33	        gfx_SetColor(next_val);
-	LD	C,(IX+-1)
-	LD	B,0
-	PUSH	BC
-	CALL	_gfx_SetColor
-	POP	BC
-;   34	        gfx_SetPixel(x, y);
-	LD	C,(IX+9)
-	LD	B,0
-	PUSH	BC
+	LD	BC,(IX+9)
+	CALL	__stoi
+	LD	BC,320
+	CALL	__imulu
+	LD	BC,(14876692)
+	ADD	HL,BC
+	LD	DE,HL
 	LD	BC,(IX+6)
 	CALL	__stoi
-	PUSH	HL
-	CALL	_gfx_SetPixel
-	POP	BC
-	POP	BC
-;   35	
-;   36	        x++;
+	ADD	HL,DE
+	LD	(HL),A
 	LD	HL,(IX+6)
 	INC	HL
 	LD	(IX+6),L
 	LD	(IX+7),H
-;   37	    }
-L_9:
+L_2:
 	LD	A,(IX+12)
 	DEC	(IX+12)
 	OR	A,A
-	JR	NZ,L_10
-;   38	}
-L_12:
+	JR	NZ,L_3
+;   25	}
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -134,13 +66,6 @@ L_12:
 
 ;**************************** _pixel_callback ***************************
 ;Name                         Addr/Register   Size   Type
-;_gfx_SetPixel                       IMPORT  -----   function
-;_gfx_SetColor                       IMPORT  -----   function
-;_gfx_GetPixel                       IMPORT  -----   function
-;_malloc                             IMPORT  -----   function
-;pixels                                IX-5      3   variable
-;cur_pix                               IX-2      1   variable
-;next_val                              IX-1      1   variable
 ;state                                IX+18      3   parameter
 ;alpha                                IX+15      1   parameter
 ;count                                IX+12      1   parameter
@@ -148,19 +73,22 @@ L_12:
 ;x                                     IX+6      2   parameter
 
 
-; Stack Frame Size: 26 (bytes)
+; Stack Frame Size: 21 (bytes)
 ;       Spill Code: 0 (instruction)
 
 
-;   39	
-;   40	/* Callback to render characters. */
-;   41	static uint8_t character_callback(int16_t x, int16_t y, mf_char character,
-;   42	        void *state)
-;   43	{
+;   26	
+;   27	/* Callback to render characters. */
+;   28	static uint8_t character_callback(int16_t x, int16_t y, mf_char character, void *state) {
 _character_callback:
 	CALL	__frameset0
-;   44	    state_t *s = (state_t*)state;
-;   45	    return mf_render_character(s->font, x, y, character, pixel_callback, state);
+;   29	    state_t *s = (state_t*)state;
+;   30	    s->charnum++;
+	LD	IY,(IX+15)
+	LD	BC,(IY+9)
+	INC	BC
+	LD	(IY+9),BC
+;   31	    return mf_render_character(s->font, x, y, character, pixel_callback, state);
 	LD	BC,(IX+15)
 	PUSH	BC
 	LD	BC,_pixel_callback
@@ -171,7 +99,6 @@ _character_callback:
 	PUSH	BC
 	LD	BC,(IX+6)
 	PUSH	BC
-	LD	IY,(IX+15)
 	LD	BC,(IY+6)
 	PUSH	BC
 	CALL	_mf_render_character
@@ -181,7 +108,7 @@ _character_callback:
 	POP	BC
 	POP	BC
 	POP	BC
-;   46	}
+;   32	}
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -200,17 +127,26 @@ _character_callback:
 ;       Spill Code: 0 (instruction)
 
 
-;   47	
-;   48	/* Callback to render lines. */
-;   49	static bool line_callback(const char *line, uint16_t count, void *state)
-;   50	{
+;   33	
+;   34	/* Callback to render lines. */
+;   35	static bool line_callback(const char *line, uint16_t count, void *state) {
 _line_callback:
 	CALL	__frameset0
-;   51	    state_t *s = (state_t*)state;
-;   52	
-;   53	    mf_render_justified(s->font, 10, s->y,
-;   54	            s->width - 20,
-;   55	            line, count, character_callback, state);
+;   36	    state_t *s = (state_t*)state;
+;   37	
+;   38	    if (s->current_line > MAX_LINES) return 0;
+	LD	A,15
+	LD	IY,(IX+12)
+	CP	A,(IY+12)
+	JR	NC,L_10
+	XOR	A,A
+	JR	L_12
+;   39	
+;   40	    dbg_sprintf(dbgout, "line %d\n", s->current_line);
+L_10:
+;   41	
+;   42	    mf_render_justified(s->font, 10, s->y, s->width - 20,
+;   43	            line, count, character_callback, state);
 	LD	BC,(IX+12)
 	PUSH	BC
 	LD	BC,_character_callback
@@ -234,8 +170,12 @@ _line_callback:
 	LD	IY,24
 	ADD	IY,SP
 	LD	SP,IY
-;   56	    s->y += s->font->line_height;
+;   44	    s->current_line++;
 	LD	IY,(IX+12)
+	LD	A,(IY+12)
+	INC	A
+	LD	(IY+12),A
+;   45	    s->y += s->font->line_height;
 	LD	IY,(IY+6)
 	LD	C,(IY+12)
 	LD	B,0
@@ -243,12 +183,20 @@ _line_callback:
 	LD	DE,(IY+4)
 	LD	HL,BC
 	ADD.SIS	HL,DE
+;   46	
+;   47	    gfx_BlitBuffer();
+	LD	BC,1
+	PUSH	BC
 	LD	BC,HL
 	LD	(IY+4),C
 	LD	(IY+5),B
-;   57	    return true;
+	CALL	_gfx_Blit
+	POP	BC
+;   48	
+;   49	    return true;
 	LD	A,1
-;   58	}
+;   50	}
+L_12:
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -256,6 +204,7 @@ _line_callback:
 
 ;**************************** _line_callback ***************************
 ;Name                         Addr/Register   Size   Type
+;_gfx_Blit                           IMPORT  -----   function
 ;_mf_render_justified                IMPORT  -----   function
 ;state                                IX+12      3   parameter
 ;count                                 IX+9      2   parameter
@@ -266,43 +215,10 @@ _line_callback:
 ;       Spill Code: 0 (instruction)
 
 
-;   59	
-;   60	/* Callback to just count the lines.
-;   61	 * Used to decide the image height */
-;   62	bool count_lines(const char *line, uint16_t count, void *state)
-;   63	{
-_count_lines:
-	CALL	__frameset0
-;   64	    int *linecount = (int*)state;
-;   65	    (*linecount)++;
-	LD	HL,(IX+12)
-	LD	BC,(HL)
-	INC	BC
-	LD	HL,(IX+12)
-	LD	(HL),BC
-;   66	    return true;
-	LD	A,1
-;   67	}
-	LD	SP,IX
-	POP	IX
-	RET	
-
-
-;**************************** _count_lines ***************************
-;Name                         Addr/Register   Size   Type
-;state                                IX+12      3   parameter
-;count                                 IX+9      2   parameter
-;line                                  IX+6      3   parameter
-
-
-; Stack Frame Size: 15 (bytes)
-;       Spill Code: 0 (instruction)
-
-
-;   68	
-;   69	void fill_palette(void) {
+;   51	
+;   52	void fill_palette(void) {
 _fill_palette:
-;   70	    memset(gfx_palette, 0, 256);
+;   53	    memset(gfx_palette, 0, 256);
 	LD	BC,256
 	PUSH	BC
 	LD	BC,0
@@ -313,89 +229,88 @@ _fill_palette:
 	POP	BC
 	POP	BC
 	POP	BC
-;   71	
-;   72	    dbg_sprintf(dbgout, "palette %d\n", gfx_RGBTo1555(112, 112, 112));
-;   73	    gfx_palette[0]  = gfx_RGBTo1555(243, 157, 101);
+;   54	
+;   55	    gfx_palette[0]  = gfx_RGBTo1555(243, 157, 101);
 	LD	HL,14877184
 	LD	(HL),108
 	INC	HL
 	LD	(HL),122
-;   74	    gfx_palette[1]  = gfx_RGBTo1555(228, 144, 89);
+;   56	    gfx_palette[1]  = gfx_RGBTo1555(228, 144, 89);
 	LD	HL,14877186
 	LD	(HL),75
 	INC	HL
 	LD	(HL),114
-;   75	    gfx_palette[2]  = gfx_RGBTo1555(214, 132, 77);
+;   57	    gfx_palette[2]  = gfx_RGBTo1555(214, 132, 77);
 	LD	HL,14877188
 	LD	(HL),9
 	INC	HL
 	LD	(HL),106
-;   76	    gfx_palette[3]  = gfx_RGBTo1555(199, 119, 65);
+;   58	    gfx_palette[3]  = gfx_RGBTo1555(199, 119, 65);
 	LD	HL,14877190
 	LD	(HL),200
 	INC	HL
 	LD	(HL),97
-;   77	    gfx_palette[4]  = gfx_RGBTo1555(185, 107, 54);
+;   59	    gfx_palette[4]  = gfx_RGBTo1555(185, 107, 54);
 	LD	HL,14877192
 	LD	(HL),166
 	INC	HL
 	LD	(HL),93
-;   78	    gfx_palette[5]  = gfx_RGBTo1555(171, 95, 42);
+;   60	    gfx_palette[5]  = gfx_RGBTo1555(171, 95, 42);
 	LD	HL,14877194
 	LD	(HL),101
 	INC	HL
 	LD	(HL),85
-;   79	    gfx_palette[6]  = gfx_RGBTo1555(157, 83, 31);
+;   61	    gfx_palette[6]  = gfx_RGBTo1555(157, 83, 31);
 	LD	HL,14877196
 	LD	(HL),67
 	INC	HL
 	LD	(HL),77
-;   80	    gfx_palette[7]  = gfx_RGBTo1555(143, 71, 19);
+;   62	    gfx_palette[7]  = gfx_RGBTo1555(143, 71, 19);
 	LD	HL,14877198
 	LD	(HL),2
 	INC	HL
 	LD	(HL),69
-;   81	    gfx_palette[8]  = gfx_RGBTo1555(129, 60, 6);
+;   63	    gfx_palette[8]  = gfx_RGBTo1555(129, 60, 6);
 	LD	HL,14877200
 	LD	(HL),224
 	INC	HL
 	LD	(HL),64
-;   82	    gfx_palette[9]  = gfx_RGBTo1555(115, 49, 0);
+;   64	    gfx_palette[9]  = gfx_RGBTo1555(115, 49, 0);
 	LD	HL,14877202
 	LD	(HL),192
 	INC	HL
 	LD	(HL),56
-;   83	    gfx_palette[10] = gfx_RGBTo1555(102, 38, 0);
+;   65	    gfx_palette[10] = gfx_RGBTo1555(102, 38, 0);
 	LD	HL,14877204
 	LD	(HL),128
 	INC	HL
 	LD	(HL),48
-;   84	    gfx_palette[11] = gfx_RGBTo1555(89, 26, 0);
+;   66	    gfx_palette[11] = gfx_RGBTo1555(89, 26, 0);
 	LD	HL,14877206
 	LD	(HL),96
 	INC	HL
 	LD	(HL),44
-;   85	    gfx_palette[12] = gfx_RGBTo1555(78, 14, 0);
+;   67	    gfx_palette[12] = gfx_RGBTo1555(78, 14, 0);
 	LD	HL,14877208
 	LD	(HL),32
 	INC	HL
 	LD	(HL),36
-;   86	    gfx_palette[13] = gfx_RGBTo1555(67, 2, 0);
+;   68	    gfx_palette[13] = gfx_RGBTo1555(67, 2, 0);
 	LD	HL,14877210
 	LD	(HL),0
 	INC	HL
 	LD	(HL),32
-;   87	    gfx_palette[14] = gfx_RGBTo1555(58, 0, 0);
+;   69	    gfx_palette[14] = gfx_RGBTo1555(58, 0, 0);
 	LD	HL,14877212
 	LD	(HL),0
 	INC	HL
 	LD	(HL),28
-;   88	    gfx_palette[15] = gfx_RGBTo1555(0, 0, 0);
+;   70	    gfx_palette[15] = gfx_RGBTo1555(0, 0, 0);
 	LD	HL,14877214
 	LD	(HL),0
 	INC	HL
 	LD	(HL),0
-;   89	}
+;   71	}
 	RET	
 
 
@@ -408,49 +323,100 @@ _fill_palette:
 ;       Spill Code: 0 (instruction)
 
 
-;   90	
-;   91	/* Main function, called first */
-;   92	int main(void) {
+;   72	
+;   73	#define CHUNK_SIZE 1024
+;   74	
+;   75	
+;   76	/* Main function, called first */
+;   77	int main(void) {
 _main:
-	LD	HL,-15
+	LD	HL,-23
 	CALL	__frameset
-;   93	    const struct mf_font_s *font;
-;   94	    struct mf_scaledfont_s scaledfont;
-;   95	    struct state_t state;
-;   96	
-;   97	    const char *text = "I'd just like to interject for a moment. What you're referring to as TI-84, is in fact, Zilog eZ80 Toolchain/TI-84 Plus CE, or as I've recently taken to calling it, utter garbage";
-	LD	BC,L__11
-	LD	(IX+-6),BC
-;   98	
-;   99	    gfx_Begin();
+;   78	    struct mf_font_s const *font;
+;   79	    struct mf_scaledfont_s scaledfont;
+;   80	    struct state_t state;
+;   81	
+;   82	    char const *text = "Welcome to CEbook!\n\nPress [MODE] to open the menu.";
+;   83	
+;   84	    ti_var_t cur_book;
+;   85	    char *book_text;
+;   86	    int num_read = 0;
+;   87	    
+;   88	    ti_CloseAll();
+	CALL	_ti_CloseAll
+;   89	
+;   90	    book_text = calloc(CHUNK_SIZE + 1, 1);
+	LD	BC,1
+	PUSH	BC
+	LD	BC,1025
+	PUSH	BC
+	CALL	_calloc
+	POP	BC
+	POP	BC
+	LD	(IX+-3),HL
+;   91	    cur_book = ti_Open("Alice", "r");
+	LD	BC,L__6
+	PUSH	BC
+	LD	BC,L__7
+	PUSH	BC
+	CALL	_ti_Open
+	POP	BC
+	POP	BC
+	LD	(IX+-4),A
+;   92	
+;   93	    dbg_sprintf(dbgout, "slot size %d pos %d\n",
+;   94	            ti_GetSize(cur_book), ti_Tell(cur_book));
+;   95	
+;   96	    num_read = ti_Read(book_text, CHUNK_SIZE, 1, cur_book); /* = 64 */
+	LD	C,(IX+-4)
+	LD	B,0
+	PUSH	BC
+	LD	BC,1
+	PUSH	BC
+	LD	BC,1024
+	PUSH	BC
+	LD	BC,(IX+-3)
+	PUSH	BC
+	CALL	_ti_Read
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	LD	(IX+-23),HL
+;   97	    dbg_sprintf(dbgout, "read %d chunks of %d bytes (%d)\n",
+;   98	            num_read, CHUNK_SIZE, num_read * CHUNK_SIZE);
+;   99	
+;  100	    dbg_sprintf(dbgout, book_text);
+;  101	
+;  102	    gfx_Begin();
 	CALL	_gfx_Begin
-;  100	    gfx_SetDrawBuffer();
+;  103	    gfx_SetDrawBuffer();
 	LD	BC,1
 	PUSH	BC
 	CALL	_gfx_SetDraw
 	POP	BC
-;  101	
-;  102	    fill_palette();
+;  104	
+;  105	    fill_palette();
 	CALL	_fill_palette
-;  103	
-;  104	    gfx_FillScreen(0);
+;  106	
+;  107	    gfx_FillScreen(0);
 	LD	BC,0
 	PUSH	BC
 	CALL	_gfx_FillScreen
 	POP	BC
-;  105	    gfx_BlitBuffer();
+;  108	    gfx_BlitBuffer();
 	LD	BC,1
 	PUSH	BC
 	CALL	_gfx_Blit
 	POP	BC
-;  106	
-;  107	    gfx_SetColor(15);
+;  109	
+;  110	    gfx_SetColor(15);
 	LD	BC,15
 	PUSH	BC
 	CALL	_gfx_SetColor
 	POP	BC
-;  108	
-;  109	    font = mf_find_font(mf_get_font_list()->font->short_name);
+;  111	
+;  112	    font = mf_find_font(mf_get_font_list()->font->short_name);
 	CALL	_mf_get_font_list
 	LD	IY,HL
 	LD	IY,(IY+3)
@@ -458,29 +424,36 @@ _main:
 	PUSH	BC
 	CALL	_mf_find_font
 	POP	BC
-	LD	(IX+-3),HL
-;  110	
-;  111	    state.width = 320;
-	LD	(IX+-15),64
-	LD	(IX+-14),1
-;  112	    state.height = 240;
-	LD	(IX+-13),240
-	LD	(IX+-12),0
-;  113	    state.y = 2;
-	LD	(IX+-11),2
-	LD	(IX+-10),0
-;  114	    state.font = font;
-	LD	(IX+-9),HL
-;  115	
-;  116	    mf_wordwrap(font, 320, text, line_callback, &state);
-	PEA	IX+-15
+	LD	(IX+-7),HL
+;  113	
+;  114	    state.width = 320;
+	LD	(IX+-20),64
+	LD	(IX+-19),1
+;  115	    state.height = 240;
+	LD	(IX+-18),240
+	LD	(IX+-17),0
+;  116	    state.y = 5;
+	LD	(IX+-16),5
+	LD	(IX+-15),0
+;  117	    state.font = font;
+	LD	(IX+-14),HL
+;  118	
+;  119	    state.current_line = 0;
+	LD	(IX+-8),0
+;  120	    state.charnum = 0;
+	LD	BC,0
+	LD	(IX+-11),BC
+;  121	    mf_wordwrap(font, 300, book_text + state.charnum, line_callback, &state);
+	PEA	IX+-20
 	LD	BC,_line_callback
 	PUSH	BC
-	LD	BC,(IX+-6)
+	LD	BC,(IX+-11)
+	LD	HL,(IX+-3)
+	ADD	HL,BC
+	PUSH	HL
+	LD	BC,300
 	PUSH	BC
-	LD	BC,320
-	PUSH	BC
-	LD	BC,(IX+-3)
+	LD	BC,(IX+-7)
 	PUSH	BC
 	CALL	_mf_wordwrap
 	POP	BC
@@ -488,27 +461,75 @@ _main:
 	POP	BC
 	POP	BC
 	POP	BC
-;  117	    gfx_BlitBuffer();
+;  122	    gfx_BlitBuffer();
 	LD	BC,1
 	PUSH	BC
 	CALL	_gfx_Blit
 	POP	BC
-;  118	
-;  119	    /* Waits for a keypress */
-;  120	    while (!os_GetCSC());
+;  123	
+;  124	    /* Waits for a keypress */
+;  125	    while (!os_GetCSC());
 L_21:
 	CALL	_os_GetCSC
 	OR	A,A
 	JR	Z,L_21
-;  121	
-;  122	    gfx_End();
-	CALL	_gfx_End
+;  126	
+;  127	    gfx_FillScreen(0);
+	LD	BC,0
+	PUSH	BC
+	CALL	_gfx_FillScreen
+	POP	BC
+;  128	
+;  129	    state.y = 5;
+	LD	(IX+-16),5
+	LD	(IX+-15),0
+;  130	    state.current_line = 0;
+	LD	(IX+-8),0
+;  131	    mf_wordwrap(font, 300, book_text + state.charnum, line_callback, &state);
+	PEA	IX+-20
+	LD	BC,_line_callback
+	PUSH	BC
+	LD	BC,(IX+-11)
+	LD	HL,(IX+-3)
+	ADD	HL,BC
+	PUSH	HL
+	LD	BC,300
+	PUSH	BC
+	LD	BC,(IX+-7)
+	PUSH	BC
+	CALL	_mf_wordwrap
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+	POP	BC
+;  132	    gfx_BlitBuffer();
+	LD	BC,1
+	PUSH	BC
+	CALL	_gfx_Blit
+	POP	BC
+;  133	
+;  134	    /* Waits for a keypress */
+;  135	    while (!os_GetCSC());
+L_24:
+	CALL	_os_GetCSC
 	OR	A,A
-;  123	
-;  124	    /* Return 0 for success */
-;  125	    return 0;
+	JR	Z,L_24
+;  136	
+;  137	    gfx_End();
+	CALL	_gfx_End
+;  138	
+;  139	    free(book_text);
+	LD	BC,(IX+-3)
+	PUSH	BC
+	CALL	_free
+	POP	BC
+	OR	A,A
+;  140	
+;  141	    /* Return 0 for success */
+;  142	    return 0;
 	SBC	HL,HL
-;  126	}
+;  143	}
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -516,6 +537,7 @@ L_21:
 
 ;**************************** _main ***************************
 ;Name                         Addr/Register   Size   Type
+;_free                               IMPORT  -----   function
 ;_gfx_End                            IMPORT  -----   function
 ;_os_GetCSC                          IMPORT  -----   function
 ;_mf_wordwrap                        IMPORT  -----   function
@@ -526,18 +548,27 @@ L_21:
 ;_gfx_FillScreen                     IMPORT  -----   function
 ;_gfx_SetDraw                        IMPORT  -----   function
 ;_gfx_Begin                          IMPORT  -----   function
-;state                                IX-15      9   variable
-;text                                  IX-6      3   variable
-;font                                  IX-3      3   variable
+;_ti_Read                            IMPORT  -----   function
+;_ti_Open                            IMPORT  -----   function
+;_calloc                             IMPORT  -----   function
+;_ti_CloseAll                        IMPORT  -----   function
+;num_read                             IX-23      3   variable
+;state                                IX-20     13   variable
+;font                                  IX-7      3   variable
+;cur_book                              IX-4      1   variable
+;book_text                             IX-3      3   variable
 
 
-; Stack Frame Size: 21 (bytes)
+; Stack Frame Size: 29 (bytes)
 ;       Spill Code: 0 (instruction)
 
 
 	SEGMENT STRSECT
-L__11:
-	DB	"I'd just like to interject for a moment. What you're referring to as TI-84, is in fact, Zilog eZ80 Toolchain/TI-84 Plus CE, or as I've recently taken to calling it, utter garbage"
+L__6:
+	DB	"r"
+	DB	0
+L__7:
+	DB	"Alice"
 	DB	0
 	XREF _memset:ROM
 	XREF _mf_wordwrap:ROM
@@ -547,21 +578,21 @@ L__11:
 	XREF _mf_render_character:ROM
 	XREF _gfx_Blit:ROM
 	XREF _gfx_SetDraw:ROM
-	XREF _gfx_GetPixel:ROM
-	XREF _gfx_SetPixel:ROM
 	XREF _gfx_FillScreen:ROM
 	XREF _gfx_SetColor:ROM
 	XREF _gfx_End:ROM
 	XREF _gfx_Begin:ROM
-	XREF _malloc:ROM
+	XREF _ti_Read:ROM
+	XREF _ti_Open:ROM
+	XREF _ti_CloseAll:ROM
+	XREF _free:ROM
+	XREF _calloc:ROM
 	XREF _os_GetCSC:ROM
+	XREF __imulu:ROM
 	XREF __stoi:ROM
 	XREF __frameset0:ROM
 	XREF __frameset:ROM
-	XREF __setflag:ROM
-	XREF __scmpzero:ROM
 	XREF __ishrs_b:ROM
 	XDEF _main
 	XDEF _fill_palette
-	XDEF _count_lines
 	END

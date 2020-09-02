@@ -671,234 +671,10 @@ L_38:
 ;  147	                       mf_character_callback_t callback,
 ;  148	                       void *state)
 ;  149	{
+_mf_render_aligned:
+	CALL	__frameset0
 ;  150	    int16_t string_width;
 ;  151	    count = strip_spaces(text, count, 0);
-;  152	    render_left(font, x0, y0, text, count, callback, state);
-;  153	}
-;  154	
-;  155	#else
-;  156	
-;  157	/* Render right-aligned string, right edge at x0. */
-;  158	static void render_right(const struct mf_font_s *font,
-;  159	                         int16_t x0, int16_t y0,
-;  160	                         mf_str text, uint16_t count,
-;  161	                         mf_character_callback_t callback,
-;  162	                         void *state)
-;  163	{
-_render_right:
-	LD	HL,-11
-	CALL	__frameset
-;  164	    int16_t x;
-;  165	    uint16_t i;
-;  166	    mf_char c1, c2 = 0;
-	LD	(IX+-8),0
-	LD	(IX+-7),0
-;  167	    mf_str tmp;
-;  168	    
-;  169	    /* Go to the end of the line. */
-;  170	    for (i = 0; i < count; i++)
-	LD	(IX+-2),0
-	LD	(IX+-1),0
-	JR	L_44
-L_42:
-;  171	        mf_getchar(&text);
-	PEA	IX+15
-	CALL	_mf_getchar
-	POP	BC
-	LD	HL,(IX+-2)
-	INC	HL
-	LD	(IX+-2),L
-	LD	(IX+-1),H
-L_44:
-	LD	BC,(IX+18)
-	LD	HL,(IX+-2)
-	OR	A,A
-	SBC.SIS	HL,BC
-	JR	C,L_42
-;  172	    
-;  173	    x = x0 - font->baseline_x;
-	LD	IY,(IX+6)
-	LD	A,(IY+10)
-	LD	B,A
-	SEXT	HL
-	LD	L,B
-	LD	BC,HL
-	LD	HL,(IX+9)
-	OR	A,A
-	SBC.SIS	HL,BC
-	LD	(IX+-4),L
-	LD	(IX+-3),H
-;  174	    for (i = 0; i < count; i++)
-	LD	(IX+-2),0
-	LD	(IX+-1),0
-	JR	L_53
-L_51:
-;  175	    {
-;  176	        mf_rewind(&text);
-	PEA	IX+15
-	CALL	_mf_rewind
-	POP	BC
-;  177	        tmp = text;
-	LD	BC,(IX+15)
-	LD	(IX+-11),BC
-;  178	        c1 = mf_getchar(&tmp);
-	PEA	IX+-11
-	CALL	_mf_getchar
-	POP	BC
-	LD	(IX+-6),L
-	LD	(IX+-5),H
-;  179	        
-;  180	        /* Perform tab alignment */
-;  181	        if (c1 == '\t')
-	LD	HL,(IX+-6)
-	LD.LIS	BC,9
-	OR	A,A
-	SBC.SIS	HL,BC
-	JR	NZ,L_48
-;  182	        {
-;  183	#if MF_USE_TABS
-;  184	            x = mf_round_to_prev_tab(font, x0, x);
-	LD	BC,(IX+-4)
-	PUSH	BC
-	LD	BC,(IX+9)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_mf_round_to_prev_tab
-	POP	BC
-	POP	BC
-	POP	BC
-	LD	(IX+-4),L
-	LD	(IX+-3),H
-;  185	            c2 = ' ';
-	LD	(IX+-8),32
-	LD	(IX+-7),0
-;  186	            continue;
-	JR	L_52
-;  187	#else
-;  188	            c1 = ' ';
-;  189	#endif
-;  190	        }
-L_48:
-;  191	        
-;  192	        /* Apply the nominal character width */
-;  193	        x -= mf_character_width(font, c1);
-	LD	BC,(IX+-6)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_mf_character_width
-	POP	BC
-	POP	BC
-	LD	C,A
-	LD	B,0
-	LD	HL,(IX+-4)
-	OR	A,A
-	SBC.SIS	HL,BC
-	LD	(IX+-4),L
-	LD	(IX+-3),H
-;  194	        
-;  195	        /* Apply kerning */
-;  196	        if (c2 != 0)
-	LD	HL,(IX+-8)
-	CALL	__scmpzero
-	JR	Z,L_50
-;  197	            x -= mf_compute_kerning(font, c1, c2);
-	LD	BC,(IX+-8)
-	PUSH	BC
-	LD	BC,(IX+-6)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_mf_compute_kerning
-	POP	BC
-	POP	BC
-	POP	BC
-	LD	B,A
-	SEXT	HL
-	LD	L,B
-	LD	BC,HL
-	LD	HL,(IX+-4)
-	OR	A,A
-	SBC.SIS	HL,BC
-	LD	(IX+-4),L
-	LD	(IX+-3),H
-L_50:
-;  198	        
-;  199	        callback(x, y0, c1, state);
-	LD	IY,(IX+21)
-	LD	BC,(IX+24)
-	PUSH	BC
-	LD	BC,(IX+-6)
-	PUSH	BC
-	LD	BC,(IX+12)
-	PUSH	BC
-	LD	BC,(IX+-4)
-	PUSH	BC
-	CALL	__indcall
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-;  200	        c2 = c1;
-	LD	BC,(IX+-6)
-	LD	(IX+-8),C
-	LD	(IX+-7),B
-;  201	    }
-L_52:
-	LD	HL,(IX+-2)
-	INC	HL
-	LD	(IX+-2),L
-	LD	(IX+-1),H
-L_53:
-	LD	BC,(IX+18)
-	LD	HL,(IX+-2)
-	OR	A,A
-	SBC.SIS	HL,BC
-	JR	C,L_51
-;  202	}
-	LD	SP,IX
-	POP	IX
-	RET	
-
-
-;**************************** _render_right ***************************
-;Name                         Addr/Register   Size   Type
-;_mf_compute_kerning                 IMPORT  -----   function
-;_mf_character_width                 IMPORT  -----   function
-;_mf_rewind                          IMPORT  -----   function
-;_mf_getchar                         IMPORT  -----   function
-;tmp                                  IX-11      3   variable
-;c2                                    IX-8      2   variable
-;c1                                    IX-6      2   variable
-;x                                     IX-4      2   variable
-;i                                     IX-2      2   variable
-;state                                IX+24      3   parameter
-;callback                             IX+21      3   parameter
-;count                                IX+18      2   parameter
-;text                                 IX+15      3   parameter
-;y0                                   IX+12      2   parameter
-;x0                                    IX+9      2   parameter
-;font                                  IX+6      3   parameter
-
-
-; Stack Frame Size: 38 (bytes)
-;       Spill Code: 0 (instruction)
-
-
-;  203	
-;  204	void mf_render_aligned(const struct mf_font_s *font,
-;  205	                       int16_t x0, int16_t y0,
-;  206	                       enum mf_align_t align,
-;  207	                       mf_str text, uint16_t count,
-;  208	                       mf_character_callback_t callback,
-;  209	                       void *state)
-;  210	{
-_mf_render_aligned:
-	LD	HL,-2
-	CALL	__frameset
-;  211	    int16_t string_width;
-;  212	    count = strip_spaces(text, count, 0);
 	LD	BC,0
 	PUSH	BC
 	LD	BC,(IX+21)
@@ -911,13 +687,7 @@ _mf_render_aligned:
 	POP	BC
 	LD	(IX+21),L
 	LD	(IX+22),H
-;  213	    
-;  214	    if (align == MF_ALIGN_LEFT)
-	LD	HL,(IX+15)
-	CALL	__icmpzero
-	JR	NZ,L_59
-;  215	    {
-;  216	        render_left(font, x0, y0, text, count, callback, state);
+;  152	    render_left(font, x0, y0, text, count, callback, state);
 	LD	BC,(IX+27)
 	PUSH	BC
 	LD	BC,(IX+24)
@@ -940,101 +710,7 @@ _mf_render_aligned:
 	POP	BC
 	POP	BC
 	POP	BC
-;  217	    }
-L_59:
-;  218	    if (align == MF_ALIGN_CENTER)
-	LD	BC,1
-	LD	HL,(IX+15)
-	OR	A,A
-	SBC	HL,BC
-	JR	NZ,L_58
-;  219	    {
-;  220	        string_width = mf_get_string_width(font, text, count, false);
-	LD	BC,0
-	PUSH	BC
-	LD	BC,(IX+21)
-	PUSH	BC
-	LD	BC,(IX+18)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_mf_get_string_width
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	LD	(IX+-2),L
-	LD	(IX+-1),H
-;  221	        x0 -= string_width / 2;
-	LD	BC,(IX+-2)
-	CALL	__stoi
-	LD	BC,2
-	CALL	__idivs
-	LD	BC,HL
-	LD	HL,(IX+9)
-	OR	A,A
-	SBC.SIS	HL,BC
-	LD	(IX+9),L
-	LD	(IX+10),H
-;  222	        render_left(font, x0, y0, text, count, callback, state);
-	LD	BC,(IX+27)
-	PUSH	BC
-	LD	BC,(IX+24)
-	PUSH	BC
-	LD	BC,(IX+21)
-	PUSH	BC
-	LD	BC,(IX+18)
-	PUSH	BC
-	LD	BC,(IX+12)
-	PUSH	BC
-	LD	BC,(IX+9)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_render_left
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-;  223	    }
-;  224	    else if (align == MF_ALIGN_RIGHT)
-	JR	L_60
-L_58:
-	LD	BC,2
-	LD	HL,(IX+15)
-	OR	A,A
-	SBC	HL,BC
-	JR	NZ,L_60
-;  225	    {
-;  226	        render_right(font, x0, y0, text, count, callback, state);
-	LD	BC,(IX+27)
-	PUSH	BC
-	LD	BC,(IX+24)
-	PUSH	BC
-	LD	BC,(IX+21)
-	PUSH	BC
-	LD	BC,(IX+18)
-	PUSH	BC
-	LD	BC,(IX+12)
-	PUSH	BC
-	LD	BC,(IX+9)
-	PUSH	BC
-	LD	BC,(IX+6)
-	PUSH	BC
-	CALL	_render_right
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-	POP	BC
-;  227	    }
-;  228	}
-L_60:
+;  153	}
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -1042,8 +718,6 @@ L_60:
 
 ;**************************** _mf_render_aligned ***************************
 ;Name                         Addr/Register   Size   Type
-;_mf_get_string_width                IMPORT  -----   function
-;string_width                          IX-2      2   variable
 ;state                                IX+27      3   parameter
 ;callback                             IX+24      3   parameter
 ;count                                IX+21      2   parameter
@@ -1054,10 +728,85 @@ L_60:
 ;font                                  IX+6      3   parameter
 
 
-; Stack Frame Size: 32 (bytes)
+; Stack Frame Size: 30 (bytes)
 ;       Spill Code: 0 (instruction)
 
 
+;  154	
+;  155	#else
+;  156	
+;  157	/* Render right-aligned string, right edge at x0. */
+;  158	static void render_right(const struct mf_font_s *font,
+;  159	                         int16_t x0, int16_t y0,
+;  160	                         mf_str text, uint16_t count,
+;  161	                         mf_character_callback_t callback,
+;  162	                         void *state)
+;  163	{
+;  164	    int16_t x;
+;  165	    uint16_t i;
+;  166	    mf_char c1, c2 = 0;
+;  167	    mf_str tmp;
+;  168	    
+;  169	    /* Go to the end of the line. */
+;  170	    for (i = 0; i < count; i++)
+;  171	        mf_getchar(&text);
+;  172	    
+;  173	    x = x0 - font->baseline_x;
+;  174	    for (i = 0; i < count; i++)
+;  175	    {
+;  176	        mf_rewind(&text);
+;  177	        tmp = text;
+;  178	        c1 = mf_getchar(&tmp);
+;  179	        
+;  180	        /* Perform tab alignment */
+;  181	        if (c1 == '\t')
+;  182	        {
+;  183	#if MF_USE_TABS
+;  184	            x = mf_round_to_prev_tab(font, x0, x);
+;  185	            c2 = ' ';
+;  186	            continue;
+;  187	#else
+;  188	            c1 = ' ';
+;  189	#endif
+;  190	        }
+;  191	        
+;  192	        /* Apply the nominal character width */
+;  193	        x -= mf_character_width(font, c1);
+;  194	        
+;  195	        /* Apply kerning */
+;  196	        if (c2 != 0)
+;  197	            x -= mf_compute_kerning(font, c1, c2);
+;  198	        
+;  199	        callback(x, y0, c1, state);
+;  200	        c2 = c1;
+;  201	    }
+;  202	}
+;  203	
+;  204	void mf_render_aligned(const struct mf_font_s *font,
+;  205	                       int16_t x0, int16_t y0,
+;  206	                       enum mf_align_t align,
+;  207	                       mf_str text, uint16_t count,
+;  208	                       mf_character_callback_t callback,
+;  209	                       void *state)
+;  210	{
+;  211	    int16_t string_width;
+;  212	    count = strip_spaces(text, count, 0);
+;  213	    
+;  214	    if (align == MF_ALIGN_LEFT)
+;  215	    {
+;  216	        render_left(font, x0, y0, text, count, callback, state);
+;  217	    }
+;  218	    if (align == MF_ALIGN_CENTER)
+;  219	    {
+;  220	        string_width = mf_get_string_width(font, text, count, false);
+;  221	        x0 -= string_width / 2;
+;  222	        render_left(font, x0, y0, text, count, callback, state);
+;  223	    }
+;  224	    else if (align == MF_ALIGN_RIGHT)
+;  225	    {
+;  226	        render_right(font, x0, y0, text, count, callback, state);
+;  227	    }
+;  228	}
 ;  229	
 ;  230	#endif
 ;  231	
@@ -1087,21 +836,21 @@ _is_justify_space:
 	LD	HL,(IX+6)
 	OR	A,A
 	SBC.SIS	HL,BC
-	JR	Z,L_62
+	JR	Z,L_43
 	LD.LIS	BC,160
 	LD	HL,(IX+6)
 	OR	A,A
 	SBC.SIS	HL,BC
-	JR	NZ,L_63
-L_62:
+	JR	NZ,L_44
+L_43:
 ;  251	}
 	LD	BC,1
 	LD	(IX+-3),BC
-	JR	L_64
-L_63:
+	JR	L_45
+L_44:
 	LD	BC,0
 	LD	(IX+-3),BC
-L_64:
+L_45:
 	LD	A,(IX+-3)
 	LD	SP,IX
 	POP	IX
@@ -1110,7 +859,7 @@ L_64:
 
 ;**************************** _is_justify_space ***************************
 ;Name                         Addr/Register   Size   Type
-;temp65                                IX-3      3   variable
+;temp46                                IX-3      3   variable
 ;c                                     IX+6      2   parameter
 
 
@@ -1129,8 +878,8 @@ _count_spaces:
 	LD	(IX+-2),0
 	LD	(IX+-1),0
 ;  257	    while (count-- && *text)
-	JR	L_71
-L_72:
+	JR	L_52
+L_53:
 ;  258	    {
 ;  259	        if (is_justify_space(mf_getchar(&text)))
 	PEA	IX+6
@@ -1140,14 +889,14 @@ L_72:
 	CALL	_is_justify_space
 	POP	BC
 	OR	A,A
-	JR	Z,L_71
+	JR	Z,L_52
 ;  260	            spaces++;
 	LD	HL,(IX+-2)
 	INC	HL
 	LD	(IX+-2),L
 	LD	(IX+-1),H
 ;  261	    }
-L_71:
+L_52:
 	LD	IY,(IX+9)
 	LEA	HL,IY+-1
 	LD	BC,(IX+9)
@@ -1155,12 +904,12 @@ L_71:
 	LD	(IX+10),H
 	LD	HL,BC
 	CALL	__scmpzero
-	JR	Z,L_73
+	JR	Z,L_54
 	LD	HL,(IX+6)
 	LD	A,(HL)
 	OR	A,A
-	JR	NZ,L_72
-L_73:
+	JR	NZ,L_53
+L_54:
 ;  262	    return spaces;
 	LD	HL,(IX+-2)
 ;  263	}
@@ -1213,11 +962,11 @@ _mf_render_justified:
 	LD.LIS	BC,10
 	OR	A,A
 	SBC.SIS	HL,BC
-	JR	Z,L_76
+	JR	Z,L_57
 	LD	HL,(IX+-14)
 	CALL	__scmpzero
-	JR	NZ,L_77
-L_76:
+	JR	NZ,L_58
+L_57:
 ;  278	    {
 ;  279	        /* Line ends in linefeed, do not justify. */
 ;  280	        render_left(font, x0, y0, text, count, callback, state);
@@ -1244,9 +993,9 @@ L_76:
 	POP	BC
 	POP	BC
 ;  281	        return;
-	JR	L_88
+	JR	L_69
 ;  282	    }
-L_77:
+L_58:
 ;  283	    
 ;  284	    string_width = mf_get_string_width(font, text, count, false);
 	LD	BC,0
@@ -1301,8 +1050,8 @@ L_77:
 	LD	(IX+-2),L
 	LD	(IX+-1),H
 ;  293	        while (count--)
-	JR	L_86
-L_87:
+	JR	L_67
+L_68:
 ;  294	        {
 ;  295	            c2 = mf_getchar(&text);
 	PEA	IX+18
@@ -1316,7 +1065,7 @@ L_87:
 	LD.LIS	BC,9
 	OR	A,A
 	SBC.SIS	HL,BC
-	JR	NZ,L_82
+	JR	NZ,L_63
 ;  298	            {
 ;  299	#if MF_USE_TABS
 ;  300	                tmp = x;
@@ -1364,12 +1113,12 @@ L_87:
 	LD	(IX+-12),C
 	LD	(IX+-11),B
 ;  304	                continue;
-	JR	L_86
+	JR	L_67
 ;  305	#else
 ;  306	                c2 = ' ';
 ;  307	#endif
 ;  308	            }
-L_82:
+L_63:
 ;  309	            
 ;  310	            if (is_justify_space(c2))
 	LD	BC,(IX+-8)
@@ -1377,7 +1126,7 @@ L_82:
 	CALL	_is_justify_space
 	POP	BC
 	OR	A,A
-	JR	Z,L_84
+	JR	Z,L_65
 ;  311	            {
 ;  312	                tmp = (adjustment + num_spaces / 2) / num_spaces;
 	LD	BC,(IX+-10)
@@ -1415,12 +1164,12 @@ L_82:
 	LD	(IX+-2),L
 	LD	(IX+-1),H
 ;  316	            }
-L_84:
+L_65:
 ;  317	            
 ;  318	            if (c1 != 0)
 	LD	HL,(IX+-12)
 	CALL	__scmpzero
-	JR	Z,L_85
+	JR	Z,L_66
 ;  319	            {
 ;  320	                tmp = mf_compute_kerning(font, c1, c2);
 	LD	BC,(IX+-8)
@@ -1451,7 +1200,7 @@ L_84:
 	LD	(IX+-4),L
 	LD	(IX+-3),H
 ;  323	            }
-L_85:
+L_66:
 ;  324	
 ;  325	            x += callback(x, y0, c2, state);
 	LD	IY,(IX+24)
@@ -1480,7 +1229,7 @@ L_85:
 	LD	(IX+-12),C
 	LD	(IX+-11),B
 ;  327	        }
-L_86:
+L_67:
 	LD	IY,(IX+21)
 	LEA	HL,IY+-1
 	LD	BC,(IX+21)
@@ -1488,10 +1237,10 @@ L_86:
 	LD	(IX+22),H
 	LD	HL,BC
 	CALL	__scmpzero
-	JR	NZ,L_87
+	JR	NZ,L_68
 ;  328	    }
 ;  329	}
-L_88:
+L_69:
 	LD	SP,IX
 	POP	IX
 	RET	
@@ -1527,13 +1276,13 @@ L_88:
 
 	XREF _mf_compute_kerning:ROM
 	XREF _mf_character_width:ROM
-	XREF _mf_rewind:ROM
 	XREF _mf_getchar:ROM
 	XREF __indcall:ROM
 	XREF __idivs:ROM
 	XREF __irems:ROM
 	XREF __stoi:ROM
 	XREF __stoiu:ROM
+	XREF __frameset0:ROM
 	XREF __frameset:ROM
 	XREF __scmpzero:ROM
 	XREF __icmpzero:ROM

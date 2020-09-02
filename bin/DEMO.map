@@ -2,21 +2,21 @@ Segment  Base   Top    High   Length
 -------- ------ ------ ------ -------
 icon     D1A882 D1A997           115h
 launcher D1A997 D1A9EF            58h
-libs     D1A9EF D1AA22            33h
-startup  D1AA22 D1AA61            3Fh
-cleanup  D1AA61 D1AA75            14h
-exit     D1AA75 D1AA7B             6h
-code     D1AA7B D1CD00          2285h
-data     D1CD00 D1CD25            25h
-strsect  D1CD25 D1CDF9            D4h
-text     D1CDF9 D1E39B          15A2h
+libs     D1A9EF D1AA30            41h
+startup  D1AA30 D1AA6F            3Fh
+cleanup  D1AA6F D1AA83            14h
+exit     D1AA83 D1AA89             6h
+code     D1AA89 D1CC65          21DCh
+data     D1CC65 D1CC8A            25h
+strsect  D1CC8A D1CCB3            29h
+text     D1CCB3 D1E257          15A4h
 bss      D031F6 D031FC D13FD6      6h
 header   D1A87F D1A882             3h
 
 Label                          Value
 ----------------------------   ------
-_os_DisableHomeTextBuffer    = D1AA7B
-_os_EnableHomeTextBuffer     = D1AA8D
+_os_DisableHomeTextBuffer    = D1AA89
+_os_EnableHomeTextBuffer     = D1AA9B
 _boot_GetBootMajorVer        = 000080
 _boot_GetHardwareVer         = 000084
 _boot_GetBootMinorVer        = 00008C
@@ -152,8 +152,9 @@ _asm_DisableAPD              = 021134
 _asm_EnableAPD               = 021138
 _asm_DrawStatusBar           = 021A3C
 _asm_ArcChk                  = 022040
-__frameset0                  = D1AA9F
-__frameset                   = D1AAAA
+_calloc                      = D1AAAD
+__frameset0                  = D1AACB
+__frameset                   = D1AAD6
 __icmpzero                   = 000138
 __idivs                      = 00013C
 __imul_b                     = 000158
@@ -167,9 +168,9 @@ __ladd_b                     = 00019C
 __ladd_b                     = 0001A0
 __lcmps                      = 0001A8
 __lmuls                      = 0001C8
-_memset                      = D1AAB8
+_memset                      = D1AAE4
 __sand                       = 000200
-__s_sbrk                     = D1AACF
+__s_sbrk                     = D1AAFB
 __scmpzero                   = 000204
 __setflag                    = 000218
 __smulu                      = 000228
@@ -178,41 +179,42 @@ __sshl_b                     = 000240
 __sshl_b                     = 000244
 __stoi                       = 000260
 __stoiu                      = 000264
-_malloc                      = D1AB20
+_free                        = D1AB1B
+_malloc                      = D1AC4A
 __alloc_base                 = D031F6
 __findlibload                = D1A997
 __program_icon               = D1A887
 __program_description        = D1A989
-__ccleanup                   = D1AA61
+__ccleanup                   = D1AA6F
 _errno                       = D008DC
 _init                        = D1A882
-_exit                        = D1AA77
-__exit                       = D1AA50
-__exitsp                     = D1AA50
-__errsp                      = D1AA50
-_main                        = D1ADEC
-_fill_palette                = D1AD45
-_count_lines                 = D1AD2F
-_mf_rewind                   = D1AFD6
-_mf_getchar                  = D1AE97
-_mf_get_font_list            = D1B33D
-_mf_find_font                = D1B2DC
-_mf_character_whitespace     = D1B197
-_mf_character_width          = D1B08E
-_mf_render_character         = D1B022
-_mf_rlefont_DejaVuSans12     = D1E346
-_mf_render_justified         = D1B9F8
-_mf_render_aligned           = D1B86F
-_mf_get_string_width         = D1B47C
-_mf_compute_kerning          = D1BDCD
-_mf_rlefont_character_width  = D1C63A
-_mf_rlefont_render_character = D1C57E
-_mf_wordwrap                 = D1CBA1
-_gfx_Begin                   = D1AA02
-_gfx_End                     = D1AA06
-_gfx_SetColor                = D1AA0A
-_gfx_FillScreen              = D1AA0E
-_gfx_SetPixel                = D1AA12
-_gfx_GetPixel                = D1AA16
-_gfx_SetDraw                 = D1AA1A
-_gfx_Blit                    = D1AA1E
+_exit                        = D1AA85
+__exit                       = D1AA5E
+__exitsp                     = D1AA5E
+__errsp                      = D1AA5E
+_main                        = D1AE99
+_fill_palette                = D1ADF2
+_mf_rewind                   = D1B126
+_mf_getchar                  = D1AFE7
+_mf_get_font_list            = D1B48D
+_mf_find_font                = D1B42C
+_mf_character_whitespace     = D1B2E7
+_mf_character_width          = D1B1DE
+_mf_render_character         = D1B172
+_mf_rlefont_DejaVuSans12     = D1E202
+_mf_render_justified         = D1B95D
+_mf_render_aligned           = D1B886
+_mf_get_string_width         = D1B5CC
+_mf_compute_kerning          = D1BD32
+_mf_rlefont_character_width  = D1C59F
+_mf_rlefont_render_character = D1C4E3
+_mf_wordwrap                 = D1CB06
+_ti_CloseAll                 = D1AA03
+_ti_Open                     = D1AA07
+_ti_Read                     = D1AA0B
+_gfx_Begin                   = D1AA18
+_gfx_End                     = D1AA1C
+_gfx_SetColor                = D1AA20
+_gfx_FillScreen              = D1AA24
+_gfx_SetDraw                 = D1AA28
+_gfx_Blit                    = D1AA2C

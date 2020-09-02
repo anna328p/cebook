@@ -34,7 +34,7 @@ _fit_leftedge:
 	LD	BC,(IX+9)
 	CALL	__stoi
 	LD	IY,(IX+18)
-	LD	A,(IY+16)
+	LD	A,(IY+8)
 	LD	DE,HL
 	UEXT	HL
 	LD	L,A
@@ -106,7 +106,7 @@ _fit_rightedge:
 	LD	BC,(IX+9)
 	CALL	__stoi
 	LD	IY,(IX+18)
-	LD	A,(IY+16)
+	LD	A,(IY+8)
 	LD	DE,HL
 	UEXT	HL
 	LD	L,A
@@ -309,7 +309,7 @@ _avg16:
 ;   62	                          mf_char c1, mf_char c2)
 ;   63	{
 _mf_compute_kerning:
-	LD	HL,-51
+	LD	HL,-35
 	CALL	__frameset
 ;   64	    struct kerning_state_s leftedge, rightedge;
 ;   65	    uint8_t w1, w2, i, min_space;
@@ -351,8 +351,8 @@ L_25:
 	UEXT	HL
 	LD	L,A
 	LD	IY,HL
-	LEA	HL,IY+15
-	LD	BC,16
+	LEA	HL,IY+7
+	LD	BC,8
 	CALL	__idivs
 	LD	(IX+-1),L
 ;   76	    if (i < 1) i = 1;
@@ -366,7 +366,7 @@ L_27:
 ;   79	    leftedge.zoneheight = rightedge.zoneheight = i;
 	LD	A,(IX+-1)
 	LD	(IX+-18),A
-	LD	(IX+-35),A
+	LD	(IX+-27),A
 ;   80	    for (i = 0; i < MF_KERNING_ZONES; i++)
 	LD	(IX+-1),0
 	JR	L_31
@@ -377,7 +377,7 @@ L_29:
 	UEXT	HL
 	LD	L,A
 	LD	BC,HL
-	LEA	HL,IX+-51
+	LEA	HL,IX+-35
 	ADD	HL,BC
 	LD	(HL),255
 ;   83	        rightedge.edgepos[i] = 0;
@@ -385,19 +385,19 @@ L_29:
 	UEXT	HL
 	LD	L,A
 	LD	BC,HL
-	LEA	HL,IX+-34
+	LEA	HL,IX+-26
 	ADD	HL,BC
 	LD	(HL),0
 	INC	(IX+-1)
 ;   84	    }
 L_31:
 	LD	A,(IX+-1)
-	CP	A,16
+	CP	A,8
 	JR	C,L_29
 ;   85	    
 ;   86	    /* Analyze the edges of both glyphs. */
 ;   87	    w1 = mf_render_character(font, 0, 0, c1, fit_rightedge, &rightedge);
-	PEA	IX+-34
+	PEA	IX+-26
 	LD	BC,_fit_rightedge
 	PUSH	BC
 	LD	BC,(IX+9)
@@ -416,7 +416,7 @@ L_31:
 	POP	BC
 	LD	(IX+-5),A
 ;   88	    w2 = mf_render_character(font, 0, 0, c2, fit_leftedge, &leftedge);
-	PEA	IX+-51
+	PEA	IX+-35
 	LD	BC,_fit_leftedge
 	PUSH	BC
 	LD	BC,(IX+12)
@@ -449,7 +449,7 @@ L_38:
 	UEXT	HL
 	LD	L,A
 	LD	BC,HL
-	LEA	HL,IX+-51
+	LEA	HL,IX+-35
 	ADD	HL,BC
 	LD	(IX+-14),HL
 	LD	A,(HL)
@@ -463,7 +463,7 @@ L_38:
 	UEXT	HL
 	LD	L,A
 	LD	BC,HL
-	LEA	HL,IX+-34
+	LEA	HL,IX+-26
 	ADD	HL,BC
 	LD	(IX+-17),HL
 	LD	A,(HL)
@@ -489,7 +489,7 @@ L_39:
 	INC	(IX+-1)
 L_40:
 	LD	A,(IX+-1)
-	CP	A,16
+	CP	A,8
 	JR	C,L_38
 ;  102	    
 ;  103	    if (min_space == 255)
@@ -584,8 +584,8 @@ L_48:
 ;**************************** _mf_compute_kerning ***************************
 ;Name                         Addr/Register   Size   Type
 ;_mf_render_character                IMPORT  -----   function
-;leftedge                             IX-51     17   variable
-;rightedge                            IX-34     17   variable
+;leftedge                             IX-35      9   variable
+;rightedge                            IX-26      9   variable
 ;G_2                                  IX-17      3   variable
 ;G_3                                  IX-14      3   variable
 ;max_adjust                           IX-11      2   variable
@@ -601,7 +601,7 @@ L_48:
 ;font                                  IX+6      3   parameter
 
 
-; Stack Frame Size: 66 (bytes)
+; Stack Frame Size: 50 (bytes)
 ;       Spill Code: 0 (instruction)
 
 

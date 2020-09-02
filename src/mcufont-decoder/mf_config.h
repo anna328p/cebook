@@ -112,7 +112,7 @@
  * If disabled, any alignment results in MF_ALIGN_LEFT.
  */
 #ifndef MF_USE_ALIGN
-#define MF_USE_ALIGN 1
+#define MF_USE_ALIGN 0
 #endif
 
 /* Enable or disable the support for tab alignment.
@@ -128,7 +128,7 @@
  * font.
  */
 #ifndef MF_KERNING_ZONES
-#define MF_KERNING_ZONES 16
+#define MF_KERNING_ZONES 8
 #endif
 
 
